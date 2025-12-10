@@ -60,7 +60,7 @@ COPY --link composer.json composer.lock symfony.lock ./
 RUN set -eux; \
     composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 
-FROM node:24-alpine AS build_node
+FROM node:25-alpine AS build_node
 
 WORKDIR /app
 
