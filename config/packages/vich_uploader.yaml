@@ -1,0 +1,11 @@
+vich_uploader:
+    db_driver: orm
+
+    metadata:
+        type: attribute
+
+    mappings:
+        school_logo:
+            uri_prefix: /api/school/logo
+            upload_destination: '%kernel.share_dir%/school/logo'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer

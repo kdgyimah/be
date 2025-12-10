@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:php8.4 AS frankenphp_base
+FROM dunglas/frankenphp:php8.5 AS frankenphp_base
 
 ENV TZ="Europe/Paris"
 
@@ -95,11 +95,11 @@ COPY --link --exclude=docker/ . ./
 
 COPY --link --from=build_node /app/public/build public/build
 
-RUN --mount=type=secret,env=SYMFONY_DECRYPTION_SECRET,required=true,id=ssk \
-    set -eux; \
+ARG APP_VERSION
+
+ENV APP_VERSION=${APP_VERSION}
+
+RUN set -eux; \
     mkdir -p var/cache var/log; \
     composer dump-autoload --classmap-authoritative --no-dev; \
-    chmod +x bin/console; sync; \
-    php bin/console secrets:decrypt-to-local --force; \
-    composer dump-env prod; \
-    composer run-script --no-dev post-install-cmd;
+    chmod +x bin/console; sync;

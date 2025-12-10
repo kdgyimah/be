@@ -9,11 +9,27 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		fi
 	fi
 
+	if [ "$APP_ENV" = 'dev' ] && ! { [ -f config/jwt/private.pem ] && [ -f config/jwt/public.pem ]; }; then
+        php bin/console lexik:jwt:generate-keypair --overwrite --quiet
+    fi
+
+	if [ "$APP_ENV" != 'dev' ]; then
+	    if [ -z "$APP_VERSION" ]; then
+	        echo "APP_VERSION is missing"
+	        exit 1
+        fi
+        if [ -z "$SYMFONY_DECRYPTION_SECRET" ]; then
+	        echo "SYMFONY_DECRYPTION_SECRET is missing"
+	        exit 1
+        fi
+	    php bin/console secrets:decrypt-to-local --force
+	    composer dump-env $APP_ENV
+        composer run-script --no-dev post-install-cmd
+	fi
+
 	# Display information about the current project
 	# Or about an error in project initialization
 	php bin/console -V
-
-	php bin/console lexik:jwt:generate-keypair --skip-if-exists
 
 	echo 'Waiting for database to be ready...'
 	ATTEMPTS_LEFT_TO_REACH_DATABASE=60

@@ -186,7 +186,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         only_exceptions?: bool, // Default: false
  *         only_main_requests?: bool, // Default: false
  *         dsn?: scalar|null, // Default: "file:%kernel.cache_dir%/profiler"
- *         collect_serializer_data?: true, // Default: true
+ *         collect_serializer_data?: bool, // Enables the serializer data collector and profiler panel. // Default: false
  *     },
  *     workflows?: bool|array{
  *         enabled?: bool, // Default: false
@@ -230,6 +230,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         enabled?: bool, // Default: false
  *         resource: scalar|null,
  *         type?: scalar|null,
+ *         cache_dir?: scalar|null, // Deprecated: Setting the "framework.router.cache_dir.cache_dir" configuration option is deprecated. It will be removed in version 8.0. // Default: "%kernel.build_dir%"
  *         default_uri?: scalar|null, // The default URI used to generate URLs in a non-HTTP context. // Default: null
  *         http_port?: scalar|null, // Default: 80
  *         https_port?: scalar|null, // Default: 443
@@ -253,6 +254,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         gc_maxlifetime?: scalar|null,
  *         save_path?: scalar|null, // Defaults to "%kernel.cache_dir%/sessions" if the "handler_id" option is not null.
  *         metadata_update_threshold?: int, // Seconds to wait between 2 session metadata updates. // Default: 0
+ *         sid_length?: int, // Deprecated: Setting the "framework.session.sid_length.sid_length" configuration option is deprecated. It will be removed in version 8.0. No alternative is provided as PHP 8.4 has deprecated the related option.
+ *         sid_bits_per_character?: int, // Deprecated: Setting the "framework.session.sid_bits_per_character.sid_bits_per_character" configuration option is deprecated. It will be removed in version 8.0. No alternative is provided as PHP 8.4 has deprecated the related option.
  *     },
  *     request?: bool|array{ // Request configuration
  *         enabled?: bool, // Default: false
@@ -326,10 +329,11 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     },
  *     validation?: bool|array{ // Validation configuration
  *         enabled?: bool, // Default: true
+ *         cache?: scalar|null, // Deprecated: Setting the "framework.validation.cache.cache" configuration option is deprecated. It will be removed in version 8.0.
  *         enable_attributes?: bool, // Default: true
  *         static_method?: list<scalar|null>,
  *         translation_domain?: scalar|null, // Default: "validators"
- *         email_validation_mode?: "html5"|"html5-allow-no-tld"|"strict", // Default: "html5"
+ *         email_validation_mode?: "html5"|"html5-allow-no-tld"|"strict"|"loose", // Default: "html5"
  *         mapping?: array{
  *             paths?: list<scalar|null>,
  *         },
@@ -341,6 +345,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         auto_mapping?: array<string, array{ // Default: []
  *             services?: list<scalar|null>,
  *         }>,
+ *     },
+ *     annotations?: bool|array{
+ *         enabled?: bool, // Default: false
  *     },
  *     serializer?: bool|array{ // Serializer configuration
  *         enabled?: bool, // Default: false
@@ -373,7 +380,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     },
  *     property_info?: bool|array{ // Property info configuration
  *         enabled?: bool, // Default: true
- *         with_constructor_extractor?: bool, // Registers the constructor extractor. // Default: true
+ *         with_constructor_extractor?: bool, // Registers the constructor extractor.
  *     },
  *     cache?: array{ // Cache configuration
  *         prefix_seed?: scalar|null, // Used to namespace cache keys when using several apps with the same shared backend. // Default: "_%kernel.project_dir%.%kernel.container_class%"
@@ -892,6 +899,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  * @psalm-type SecurityConfig = array{
  *     access_denied_url?: scalar|null, // Default: null
  *     session_fixation_strategy?: "none"|"migrate"|"invalidate", // Default: "migrate"
+ *     hide_user_not_found?: bool, // Deprecated: The "hide_user_not_found" option is deprecated and will be removed in 8.0. Use the "expose_security_errors" option instead.
  *     expose_security_errors?: \Symfony\Component\Security\Http\Authentication\ExposeSecurityLevel::None|\Symfony\Component\Security\Http\Authentication\ExposeSecurityLevel::AccountStatus|\Symfony\Component\Security\Http\Authentication\ExposeSecurityLevel::All, // Default: "none"
  *     erase_credentials?: bool, // Default: true
  *     access_decision_manager?: array{
@@ -1134,7 +1142,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *                     claim?: scalar|null, // Claim which contains the user identifier (e.g.: sub, email..). // Default: "sub"
  *                     audience: scalar|null, // Audience set in the token, for validation purpose.
  *                     issuers: list<scalar|null>,
+ *                     algorithm?: array<mixed>,
  *                     algorithms: list<scalar|null>,
+ *                     key?: scalar|null, // Deprecated: The "key" option is deprecated and will be removed in 8.0. Use the "keyset" option instead. // JSON-encoded JWK used to sign the token (must contain a "kty" key).
  *                     keyset?: scalar|null, // JSON-encoded JWKSet used to sign the token (must contain a list of valid public keys).
  *                     encryption?: bool|array{
  *                         enabled?: bool, // Default: false
@@ -1289,6 +1299,235 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         cache?: scalar|null, // Storage to track blocked tokens // Default: "cache.app"
  *     },
  * }
+ * @psalm-type MonologConfig = array{
+ *     use_microseconds?: scalar|null, // Default: true
+ *     channels?: list<scalar|null>,
+ *     handlers?: array<string, array{ // Default: []
+ *         type: scalar|null,
+ *         id?: scalar|null,
+ *         enabled?: bool, // Default: true
+ *         priority?: scalar|null, // Default: 0
+ *         level?: scalar|null, // Default: "DEBUG"
+ *         bubble?: bool, // Default: true
+ *         interactive_only?: bool, // Default: false
+ *         app_name?: scalar|null, // Default: null
+ *         include_stacktraces?: bool, // Default: false
+ *         process_psr_3_messages?: array{
+ *             enabled?: bool|null, // Default: null
+ *             date_format?: scalar|null,
+ *             remove_used_context_fields?: bool,
+ *         },
+ *         path?: scalar|null, // Default: "%kernel.logs_dir%/%kernel.environment%.log"
+ *         file_permission?: scalar|null, // Default: null
+ *         use_locking?: bool, // Default: false
+ *         filename_format?: scalar|null, // Default: "{filename}-{date}"
+ *         date_format?: scalar|null, // Default: "Y-m-d"
+ *         ident?: scalar|null, // Default: false
+ *         logopts?: scalar|null, // Default: 1
+ *         facility?: scalar|null, // Default: "user"
+ *         max_files?: scalar|null, // Default: 0
+ *         action_level?: scalar|null, // Default: "WARNING"
+ *         activation_strategy?: scalar|null, // Default: null
+ *         stop_buffering?: bool, // Default: true
+ *         passthru_level?: scalar|null, // Default: null
+ *         excluded_http_codes?: list<array{ // Default: []
+ *             code?: scalar|null,
+ *             urls?: list<scalar|null>,
+ *         }>,
+ *         accepted_levels?: list<scalar|null>,
+ *         min_level?: scalar|null, // Default: "DEBUG"
+ *         max_level?: scalar|null, // Default: "EMERGENCY"
+ *         buffer_size?: scalar|null, // Default: 0
+ *         flush_on_overflow?: bool, // Default: false
+ *         handler?: scalar|null,
+ *         url?: scalar|null,
+ *         exchange?: scalar|null,
+ *         exchange_name?: scalar|null, // Default: "log"
+ *         channel?: scalar|null, // Default: null
+ *         bot_name?: scalar|null, // Default: "Monolog"
+ *         use_attachment?: scalar|null, // Default: true
+ *         use_short_attachment?: scalar|null, // Default: false
+ *         include_extra?: scalar|null, // Default: false
+ *         icon_emoji?: scalar|null, // Default: null
+ *         webhook_url?: scalar|null,
+ *         exclude_fields?: list<scalar|null>,
+ *         token?: scalar|null,
+ *         region?: scalar|null,
+ *         source?: scalar|null,
+ *         use_ssl?: bool, // Default: true
+ *         user?: mixed,
+ *         title?: scalar|null, // Default: null
+ *         host?: scalar|null, // Default: null
+ *         port?: scalar|null, // Default: 514
+ *         config?: list<scalar|null>,
+ *         members?: list<scalar|null>,
+ *         connection_string?: scalar|null,
+ *         timeout?: scalar|null,
+ *         time?: scalar|null, // Default: 60
+ *         deduplication_level?: scalar|null, // Default: 400
+ *         store?: scalar|null, // Default: null
+ *         connection_timeout?: scalar|null,
+ *         persistent?: bool,
+ *         message_type?: scalar|null, // Default: 0
+ *         parse_mode?: scalar|null, // Default: null
+ *         disable_webpage_preview?: bool|null, // Default: null
+ *         disable_notification?: bool|null, // Default: null
+ *         split_long_messages?: bool, // Default: false
+ *         delay_between_messages?: bool, // Default: false
+ *         topic?: int, // Default: null
+ *         factor?: int, // Default: 1
+ *         tags?: list<scalar|null>,
+ *         console_formatter_options?: mixed, // Default: []
+ *         formatter?: scalar|null,
+ *         nested?: bool, // Default: false
+ *         publisher?: string|array{
+ *             id?: scalar|null,
+ *             hostname?: scalar|null,
+ *             port?: scalar|null, // Default: 12201
+ *             chunk_size?: scalar|null, // Default: 1420
+ *             encoder?: "json"|"compressed_json",
+ *         },
+ *         mongodb?: string|array{
+ *             id?: scalar|null, // ID of a MongoDB\Client service
+ *             uri?: scalar|null,
+ *             username?: scalar|null,
+ *             password?: scalar|null,
+ *             database?: scalar|null, // Default: "monolog"
+ *             collection?: scalar|null, // Default: "logs"
+ *         },
+ *         elasticsearch?: string|array{
+ *             id?: scalar|null,
+ *             hosts?: list<scalar|null>,
+ *             host?: scalar|null,
+ *             port?: scalar|null, // Default: 9200
+ *             transport?: scalar|null, // Default: "Http"
+ *             user?: scalar|null, // Default: null
+ *             password?: scalar|null, // Default: null
+ *         },
+ *         index?: scalar|null, // Default: "monolog"
+ *         document_type?: scalar|null, // Default: "logs"
+ *         ignore_error?: scalar|null, // Default: false
+ *         redis?: string|array{
+ *             id?: scalar|null,
+ *             host?: scalar|null,
+ *             password?: scalar|null, // Default: null
+ *             port?: scalar|null, // Default: 6379
+ *             database?: scalar|null, // Default: 0
+ *             key_name?: scalar|null, // Default: "monolog_redis"
+ *         },
+ *         predis?: string|array{
+ *             id?: scalar|null,
+ *             host?: scalar|null,
+ *         },
+ *         from_email?: scalar|null,
+ *         to_email?: list<scalar|null>,
+ *         subject?: scalar|null,
+ *         content_type?: scalar|null, // Default: null
+ *         headers?: list<scalar|null>,
+ *         mailer?: scalar|null, // Default: null
+ *         email_prototype?: string|array{
+ *             id: scalar|null,
+ *             method?: scalar|null, // Default: null
+ *         },
+ *         verbosity_levels?: array{
+ *             VERBOSITY_QUIET?: scalar|null, // Default: "ERROR"
+ *             VERBOSITY_NORMAL?: scalar|null, // Default: "WARNING"
+ *             VERBOSITY_VERBOSE?: scalar|null, // Default: "NOTICE"
+ *             VERBOSITY_VERY_VERBOSE?: scalar|null, // Default: "INFO"
+ *             VERBOSITY_DEBUG?: scalar|null, // Default: "DEBUG"
+ *         },
+ *         channels?: string|array{
+ *             type?: scalar|null,
+ *             elements?: list<scalar|null>,
+ *         },
+ *     }>,
+ * }
+ * @psalm-type DebugConfig = array{
+ *     max_items?: int, // Max number of displayed items past the first level, -1 means no limit. // Default: 2500
+ *     min_depth?: int, // Minimum tree depth to clone all the items, 1 is default. // Default: 1
+ *     max_string_length?: int, // Max length of displayed strings, -1 means no limit. // Default: -1
+ *     dump_destination?: scalar|null, // A stream URL where dumps should be written to. // Default: null
+ *     theme?: "dark"|"light", // Changes the color of the dump() output when rendered directly on the templating. "dark" (default) or "light". // Default: "dark"
+ * }
+ * @psalm-type TwigConfig = array{
+ *     form_themes?: list<scalar|null>,
+ *     globals?: array<string, array{ // Default: []
+ *         id?: scalar|null,
+ *         type?: scalar|null,
+ *         value?: mixed,
+ *     }>,
+ *     autoescape_service?: scalar|null, // Default: null
+ *     autoescape_service_method?: scalar|null, // Default: null
+ *     base_template_class?: scalar|null, // Deprecated: The child node "base_template_class" at path "twig.base_template_class" is deprecated.
+ *     cache?: scalar|null, // Default: true
+ *     charset?: scalar|null, // Default: "%kernel.charset%"
+ *     debug?: bool, // Default: "%kernel.debug%"
+ *     strict_variables?: bool, // Default: "%kernel.debug%"
+ *     auto_reload?: scalar|null,
+ *     optimizations?: int,
+ *     default_path?: scalar|null, // The default path used to load templates. // Default: "%kernel.project_dir%/templates"
+ *     file_name_pattern?: list<scalar|null>,
+ *     paths?: array<string, mixed>,
+ *     date?: array{ // The default format options used by the date filter.
+ *         format?: scalar|null, // Default: "F j, Y H:i"
+ *         interval_format?: scalar|null, // Default: "%d days"
+ *         timezone?: scalar|null, // The timezone used when formatting dates, when set to null, the timezone returned by date_default_timezone_get() is used. // Default: null
+ *     },
+ *     number_format?: array{ // The default format options for the number_format filter.
+ *         decimals?: int, // Default: 0
+ *         decimal_point?: scalar|null, // Default: "."
+ *         thousands_separator?: scalar|null, // Default: ","
+ *     },
+ *     mailer?: array{
+ *         html_to_text_converter?: scalar|null, // A service implementing the "Symfony\Component\Mime\HtmlToTextConverter\HtmlToTextConverterInterface". // Default: null
+ *     },
+ * }
+ * @psalm-type WebProfilerConfig = array{
+ *     toolbar?: bool|array{ // Profiler toolbar configuration
+ *         enabled?: bool, // Default: false
+ *         ajax_replace?: bool, // Replace toolbar on AJAX requests // Default: false
+ *     },
+ *     intercept_redirects?: bool, // Default: false
+ *     excluded_ajax_paths?: scalar|null, // Default: "^/((index|app(_[\\w]+)?)\\.php/)?_wdt"
+ * }
+ * @psalm-type VichUploaderConfig = array{
+ *     default_filename_attribute_suffix?: scalar|null, // Default: "_name"
+ *     db_driver: scalar|null,
+ *     storage?: scalar|null, // Default: "file_system"
+ *     use_flysystem_to_resolve_uri?: bool, // Default: false
+ *     twig?: scalar|null, // twig requires templating // Default: true
+ *     form?: scalar|null, // Default: true
+ *     metadata?: array{
+ *         cache?: scalar|null, // Default: "file"
+ *         type?: scalar|null, // Default: "attribute"
+ *         file_cache?: array{
+ *             dir?: scalar|null, // Default: "%kernel.cache_dir%/vich_uploader"
+ *         },
+ *         auto_detection?: bool, // Default: true
+ *         directories?: list<array{ // Default: []
+ *             path: scalar|null,
+ *             namespace_prefix?: scalar|null, // Default: ""
+ *         }>,
+ *     },
+ *     mappings?: array<string, array{ // Default: []
+ *         uri_prefix?: scalar|null, // Default: "/uploads"
+ *         upload_destination?: scalar|null, // Default: null
+ *         namer?: string|array{
+ *             service?: scalar|null, // Default: null
+ *             options?: mixed, // Default: null
+ *         },
+ *         directory_namer?: string|array{
+ *             service?: scalar|null, // Default: null
+ *             options?: mixed, // Default: null
+ *         },
+ *         delete_on_remove?: scalar|null, // Default: true
+ *         erase_fields?: scalar|null, // Default: true
+ *         delete_on_update?: scalar|null, // Default: true
+ *         inject_on_load?: scalar|null, // Default: false
+ *         namer_keep_extension?: scalar|null, // Default: false
+ *         db_driver?: scalar|null, // Default: null
+ *     }>,
+ * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
@@ -1298,6 +1537,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     doctrine_migrations?: DoctrineMigrationsConfig,
  *     security?: SecurityConfig,
  *     lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *     monolog?: MonologConfig,
+ *     vich_uploader?: VichUploaderConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1307,6 +1548,11 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         security?: SecurityConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *         monolog?: MonologConfig,
+ *         debug?: DebugConfig,
+ *         twig?: TwigConfig,
+ *         web_profiler?: WebProfilerConfig,
+ *         vich_uploader?: VichUploaderConfig,
  *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
@@ -1317,6 +1563,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         security?: SecurityConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *         monolog?: MonologConfig,
+ *         vich_uploader?: VichUploaderConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -1327,6 +1575,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         security?: SecurityConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *         monolog?: MonologConfig,
+ *         twig?: TwigConfig,
+ *         web_profiler?: WebProfilerConfig,
+ *         vich_uploader?: VichUploaderConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,
