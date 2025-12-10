@@ -1,0 +1,39 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "composer" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
+      time: "18:00"
+      timezone: "Europe/Paris"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-name: "symfony/*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+    groups:
+      symfony:
+        patterns:
+          - "symfony/*"
+      twig:
+        patterns:
+          - "twig/*"
+
+  - package-ecosystem: "docker"
+    directory: "/docker/web"
+    schedule:
+      interval: "daily"
+      time: "18:00"
+      timezone: "Europe/Paris"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "18:00"
+      timezone: "Europe/Paris"
