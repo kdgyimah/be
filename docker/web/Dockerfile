@@ -53,37 +53,12 @@ COPY --link docker/web/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
-FROM frankenphp_base AS frankenphp_transition
+FROM frankenphp_base AS frankenphp_prod
 
 # prevent the reinstallation of vendors at every changes in the source code
 COPY --link composer.json composer.lock symfony.lock ./
 RUN set -eux; \
     composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
-
-FROM node:25-alpine AS build_node
-
-WORKDIR /app
-
-COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY --link --from=frankenphp_transition /app/vendor/ ./vendor/
-RUN --mount=type=cached,target=/pnpm/store,id=pnpm \
-    set -eux && \
-    corepack enable && \
-    corepack install && \
-    pnpm config set store-dir /pnpm/store --global && \
-    pnpm install --frozen-lockfile
-
-COPY --link webpack.config.js tailwind.config.js postcss.config.mjs ./
-COPY --link assets ./assets
-COPY --link templates ./templates
-
-RUN set -eux && \
-    ls -a && \
-    pnpm run build
-
-RUN rm -fr node_modules
-
-FROM frankenphp_transition AS frankenphp_prod
 
 ENV APP_ENV=prod
 
@@ -92,8 +67,6 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --link docker/web/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 
 COPY --link --exclude=docker/ . ./
-
-COPY --link --from=build_node /app/public/build public/build
 
 ARG APP_VERSION
 
