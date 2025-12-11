@@ -18,9 +18,9 @@ readonly class RefreshTokenService
     {
     }
 
-    public function extractRefreshToken(Request $request): ?string
+    public function extractRefreshToken(Request $request): string
     {
-        return $request->cookies->get($this->refreshTokenParameterName);
+        return $request->cookies->getString($this->refreshTokenParameterName);
     }
 
     public function removeCookie(Response $response): void
@@ -47,7 +47,7 @@ readonly class RefreshTokenService
                 true,
                 true,
                 false,
-                Cookie::SAMESITE_LAX,
+                Cookie::SAMESITE_STRICT,
                 false
             )
         );

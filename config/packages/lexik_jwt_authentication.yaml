@@ -8,3 +8,34 @@ lexik_jwt_authentication:
     blocklist_token:
         enabled: true
         cache: cache.app
+
+    token_extractors:
+        split_cookie:
+            enabled: true
+            cookies:
+                - yesman_jwt_hp
+                - yesman_jwt_s
+
+    set_cookies:
+        yesman_jwt_hp:
+            lifetime: null
+            samesite: strict
+            path: /
+            domain: '%env(JWT_COOKIE_DOMAIN)%'
+            httpOnly: false
+            partitioned: false # Only for Symfony 6.4 or higher
+            split:
+                - header
+                - payload
+
+        yesman_jwt_s:
+            lifetime: null
+            samesite: strict
+            path: /
+            domain: '%env(JWT_COOKIE_DOMAIN)%'
+            httpOnly: true
+            partitioned: false # Only for Symfony 6.4 or higher
+            split:
+                - signature
+
+    remove_token_from_body_when_cookies_used: true

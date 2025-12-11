@@ -6,6 +6,8 @@ vich_uploader:
 
     mappings:
         school_logo:
-            uri_prefix: /api/school/logo
-            upload_destination: '%kernel.share_dir%/school/logo'
-            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+            upload_destination: '%kernel.share_dir%/files/school/logo'
+            namer:
+                service: Vich\UploaderBundle\Naming\PropertyNamer
+                options:
+                    property: 'id'

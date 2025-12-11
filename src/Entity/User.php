@@ -12,15 +12,12 @@ use Symfony\Component\Clock\DatePoint;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: '`user`')]
 #[UniqueEntity(fields: ['email'])]
-#[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    public const string ROLE_SCHOOL = 'ROLE_SCHOOL';
     public const string ROLE_ADMIN = 'ROLE_ADMIN';
 
     #[ORM\Id]
@@ -41,7 +38,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::STRING, length: 255)]
     private(set) string $password;
 
-    #[Assert\Choice(choices: [User::ROLE_SCHOOL, User::ROLE_ADMIN], multiple: true)]
     #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true)]
     private array $roles = [];
 
@@ -114,16 +110,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getPassword(): ?string
     {
         return $this->password;
-    }
-
-    #[ORM\PreUpdate]
-    public function preUpdate(): void
-    {
-        $this->updatedAt = new DatePoint();
-    }
-
-    #[\Deprecated]
-    public function eraseCredentials(): void
-    {
     }
 }

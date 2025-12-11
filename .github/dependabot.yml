@@ -20,14 +20,11 @@ updates:
       symfony:
         patterns:
           - "symfony/*"
-      twig:
-        patterns:
-          - "twig/*"
 
   - package-ecosystem: "docker"
     directory: "/docker/web"
     schedule:
-      interval: "daily"
+      interval: "semiannually"
       time: "18:00"
       timezone: "Europe/Paris"
 

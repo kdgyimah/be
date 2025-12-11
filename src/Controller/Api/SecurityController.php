@@ -6,7 +6,9 @@ use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Service\RefreshTokenService;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Security\Http\Cookie\JWTCookieProvider;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,13 +19,13 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 class SecurityController
 {
     #[Route('/login', name: 'login')]
-    public function login(): Response
+    public function login(): JsonResponse
     {
         throw new \RuntimeException('login: not supposed to be reached');
     }
 
     #[Route('/logout', name: 'logout')]
-    public function logout(): Response
+    public function logout(): JsonResponse
     {
         throw new \RuntimeException('logout: not supposed to be reached');
     }
@@ -34,28 +36,35 @@ class SecurityController
         RefreshTokenService $refreshTokenService,
         EntityManagerInterface $entityManager,
         #[CurrentUser] User $currentUser,
-        JWTTokenManagerInterface $JWTManager
-    ): Response {
+        JWTTokenManagerInterface $JWTManager,
+        #[Autowire(service: 'lexik_jwt_authentication.cookie_provider.yesman_jwt_hp')]
+        JWTCookieProvider $JWTCookieProviderHp,
+        #[Autowire(service: 'lexik_jwt_authentication.cookie_provider.yesman_jwt_s')]
+        JWTCookieProvider $JWTCookieProviderS,
+    ): JsonResponse {
         $refreshTokenString = $refreshTokenService->extractRefreshToken($request);
         $response = new JsonResponse();
 
-        if (empty($refreshTokenString)) {
-            return $response
-                ->setData(['message' => 'Bad credentials', 'code' => Response::HTTP_BAD_REQUEST])
-                ->setStatusCode(Response::HTTP_BAD_REQUEST);
-        }
+        if (!empty($refreshTokenString)) {
+            $refreshToken = $entityManager->getRepository(RefreshToken::class)->find($refreshTokenString);
 
-        $refreshToken = $entityManager->getRepository(RefreshToken::class)->find($refreshTokenString);
+            if ($refreshToken?->user === $currentUser) {
+                $cookieProviders = [$JWTCookieProviderHp, $JWTCookieProviderS];
+                $token = $JWTManager->create($currentUser);
 
-        if ($refreshToken?->user !== $currentUser) {
+                foreach ($cookieProviders as $cookieProvider) {
+                    $response->headers->setCookie($cookieProvider->createCookie($token));
+                }
+
+                return $response
+                    ->setStatusCode(Response::HTTP_NO_CONTENT);
+            }
 
             $refreshTokenService->removeCookie($response);
-            return $response
-                ->setData(['message' => 'Bad credentials', 'code' => Response::HTTP_BAD_REQUEST])
-                ->setStatusCode(Response::HTTP_BAD_REQUEST);
         }
 
         return $response
-            ->setData(['token' => $JWTManager->create($currentUser)]);
+            ->setData(['message' => 'Bad credentials', 'code' => Response::HTTP_BAD_REQUEST])
+            ->setStatusCode(Response::HTTP_BAD_REQUEST);
     }
 }

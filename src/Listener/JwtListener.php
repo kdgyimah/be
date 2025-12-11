@@ -22,13 +22,12 @@ use Symfony\Component\Uid\Uuid;
 readonly class JwtListener
 {
     public function __construct(
-        private RequestStack           $requestStack,
+        private RequestStack $requestStack,
         #[Autowire(param: 'refresh_token_ttl')]
-        private int                    $refreshTokenTTL,
+        private int $refreshTokenTTL,
         private EntityManagerInterface $entityManager,
-        private RefreshTokenService    $refreshTokenService,
-    )
-    {
+        private RefreshTokenService $refreshTokenService
+    ) {
     }
 
     public function onJWTCreated(JWTCreatedEvent $event): void
@@ -59,10 +58,10 @@ readonly class JwtListener
         $refreshTokenString = $this->refreshTokenService->extractRefreshToken($request);
         $refreshToken = null;
 
-        if ($refreshTokenString !== null) {
+        if (!empty($refreshTokenString)) {
             $refreshToken = $this->entityManager->getRepository(RefreshToken::class)->find($refreshTokenString);
 
-            if ($refreshToken?->isValid() === false || $isRememberMe === false) {
+            if ($refreshToken?->isValid() === false) {
                 $this->entityManager->remove($refreshToken);
                 $this->entityManager->flush();
                 $refreshToken = null;
@@ -71,6 +70,12 @@ readonly class JwtListener
 
         if ($isRememberMe === false) {
             $this->refreshTokenService->removeCookie($event->getResponse());
+
+            if ($refreshToken !== null) {
+                $this->entityManager->remove($refreshToken);
+                $this->entityManager->flush();
+            }
+
             return;
         }
 

@@ -6,17 +6,13 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Events;
 use Symfony\Component\Clock\DatePoint;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 #[AsEntityListener(event: Events::preUpdate, method: 'preUpdate', entity: User::class)]
-readonly class UserEntityListener
+readonly class UpdatedAtListener
 {
-    public function __construct(private PropertyAccessorInterface $propertyAccessor)
-    {
-    }
-
     public function preUpdate(User $user): void
     {
-        $this->propertyAccessor->setValue($user, 'updatedAt', new DatePoint());
+        $rp = new \ReflectionProperty(User::class, 'updatedAt');
+        $rp->setValue($user, new DatePoint());
     }
 }

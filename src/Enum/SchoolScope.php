@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum SchoolMemberScope: string
+enum SchoolScope: string
 {
     case DIRECTOR = 'DIRECTOR';
     case BUDGET_MANAGER = 'BUDGET_MANAGER';
