@@ -6,7 +6,7 @@ docker compose exec web php bin/console doctrine:schema:update --force
 docker compose exec web php bin/console doctrine:fixtures:load --quiet
 ```
 
-You also need to trust tls certificates:
+## You also need to trust tls certificates:
 
 ### Linux
 ```console
