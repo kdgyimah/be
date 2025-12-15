@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.19
+
 FROM dunglas/frankenphp:php8.5 AS frankenphp_base
 
 ENV TZ="Europe/Paris"
