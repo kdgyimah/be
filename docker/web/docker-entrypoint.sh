@@ -1,12 +1,8 @@
 #!/bin/sh
 set -e
 if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
-	if [ -z "$(ls -A 'vendor/' 2>/dev/null)" ]; then
-		if [ "$APP_ENV" = 'dev' ]; then
-			composer install
-		else
-			composer install --prefer-dist --no-progress --no-interaction
-		fi
+	if [ -z "$(ls -A 'vendor/' 2>/dev/null)" ] && [ "$APP_ENV" = 'dev' ]; then
+	    composer install
 	fi
 
 	if [ "$APP_ENV" = 'dev' ] && ! { [ -f config/jwt/private.pem ] && [ -f config/jwt/public.pem ]; }; then

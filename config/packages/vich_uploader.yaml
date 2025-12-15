@@ -1,5 +1,6 @@
 vich_uploader:
     db_driver: orm
+    twig: false
 
     metadata:
         type: attribute

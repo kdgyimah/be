@@ -61,6 +61,9 @@ RUN set -eux; \
     composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 
 ENV APP_ENV=prod
+ENV APP_DEBUG=false
+
+ENV SERVER_NAME=":80"
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
@@ -75,4 +78,4 @@ ENV APP_VERSION=${APP_VERSION}
 RUN set -eux; \
     mkdir -p var/cache var/log; \
     composer dump-autoload --classmap-authoritative --no-dev; \
-    chmod +x bin/console; sync;
+    chmod +x bin/console;

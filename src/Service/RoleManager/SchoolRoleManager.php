@@ -3,7 +3,7 @@
 namespace App\Service\RoleManager;
 
 use App\Entity\School\School;
-use App\Entity\School\SchoolUserScope;
+use App\Entity\School\UserScope;
 use App\Entity\User;
 use App\Enum\SchoolScope;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,7 +20,7 @@ final readonly class SchoolRoleManager
     public function setDirector(School $school, User $user): void
     {
         $currentUserScopes = $this->entityManager
-            ->getRepository(SchoolUserScope::class)
+            ->getRepository(UserScope::class)
             ->findBy(['school' => $school, 'scope' => SchoolScope::DIRECTOR]);
 
         $exists = false;
@@ -44,7 +44,7 @@ final readonly class SchoolRoleManager
             $this->entityManager->remove($currentUserScope);
         }
 
-        $currentUserScope = new SchoolUserScope($user, $school, SchoolScope::DIRECTOR);
+        $currentUserScope = new UserScope($user, $school, SchoolScope::DIRECTOR);
         $this->entityManager->persist($currentUserScope);
         $this->entityManager->flush();
     }

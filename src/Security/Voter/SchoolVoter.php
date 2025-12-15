@@ -3,9 +3,9 @@
 namespace App\Security\Voter;
 
 use App\Entity\School\School;
-use App\Entity\School\SchoolUserScope;
 use App\Entity\User;
-use App\Repository\SchoolUserScopeRepository;
+use App\Enum\SchoolScope;
+use App\Repository\School\UserScopeRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -13,24 +13,27 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 class SchoolVoter extends Voter
 {
     public const string SHOW = SchoolVoter::class.':show';
+    public const string MANAGE_STUDENTS = SchoolVoter::class.':manageStudents';
 
-    public function __construct(private readonly SchoolUserScopeRepository $schoolUserScopeRepository)
+    public function __construct(private readonly UserScopeRepository $userScopeRepository)
     {
     }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $attribute === SchoolVoter::SHOW && $subject instanceof School;
+        $subjectType = is_object($subject) ? get_class($subject) : get_debug_type($subject);
+
+        return $this->supportsAttribute($attribute) && $this->supportsType($subjectType);
     }
 
     public function supportsAttribute(string $attribute): bool
     {
-        return $attribute === SchoolVoter::SHOW;
+        return in_array($attribute, [SchoolVoter::SHOW, SchoolVoter::MANAGE_STUDENTS]);
     }
 
     public function supportsType(string $subjectType): bool
     {
-        return is_a($subjectType, School::class, true);
+        return is_a($subjectType, School::class, true) || $subjectType === 'null';
     }
 
     protected function voteOnAttribute(
@@ -44,19 +47,26 @@ class SchoolVoter extends Voter
 
         if (!$user instanceof User) {
             $vote?->addReason('user is not logged in');
+
             return false;
         }
 
-        /** @var School $school */
-        $school = $subject;
+        if (!$subject instanceof School) {
+            $vote?->addReason('subject is not a school');
 
-        $scope = $this->schoolUserScopeRepository->findOneBy(['user' => $user->id, 'school' => $school->id]);
-
-        if (!$scope instanceof SchoolUserScope) {
-            $vote?->addReason("user doesn't have role in school");
             return false;
         }
 
-        return true;
+        return match ($attribute) {
+            SchoolVoter::SHOW => $this->userScopeRepository->count(['user' => $user, 'school' => $subject->id]) > 0,
+            SchoolVoter::MANAGE_STUDENTS => $this->userScopeRepository->count(
+                    [
+                        'user' => $user,
+                        'school' => $subject->id,
+                        'scope' => [SchoolScope::MANAGE_STUDENTS, SchoolScope::DIRECTOR],
+                    ]
+                ) > 0,
+            default => false,
+        };
     }
 }

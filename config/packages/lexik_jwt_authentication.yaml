@@ -23,7 +23,7 @@ lexik_jwt_authentication:
             path: /
             domain: '%env(JWT_COOKIE_DOMAIN)%'
             httpOnly: false
-            partitioned: false # Only for Symfony 6.4 or higher
+            partitioned: false
             split:
                 - header
                 - payload
@@ -34,7 +34,7 @@ lexik_jwt_authentication:
             path: /
             domain: '%env(JWT_COOKIE_DOMAIN)%'
             httpOnly: true
-            partitioned: false # Only for Symfony 6.4 or higher
+            partitioned: false
             split:
                 - signature
 

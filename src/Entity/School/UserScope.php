@@ -5,12 +5,13 @@ namespace App\Entity\School;
 use App\Entity\AbstractUserScope;
 use App\Entity\User;
 use App\Enum\SchoolScope;
-use App\Repository\SchoolUserScopeRepository;
+use App\Repository\School\UserScopeRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: SchoolUserScopeRepository::class)]
-final class SchoolUserScope extends AbstractUserScope
+#[ORM\Entity(repositoryClass: UserScopeRepository::class)]
+#[ORM\Table(name: 'school_user_scope')]
+final class UserScope extends AbstractUserScope
 {
     #[ORM\Id]
     #[ORM\Column(type: Types::STRING, enumType: SchoolScope::class)]

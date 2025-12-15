@@ -2,10 +2,12 @@
 
 namespace App\Entity;
 
+use App\Entity\Interface\TimestampableEntityInterface;
+use App\Entity\Trait\TimestampableEntityTrait;
+use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
-use Symfony\Bridge\Doctrine\Types\DatePointType;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Clock\DatePoint;
@@ -13,11 +15,13 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[UniqueEntity(fields: ['email'])]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface, TimestampableEntityInterface
 {
+    use TimestampableEntityTrait;
+
     public const string ROLE_ADMIN = 'ROLE_ADMIN';
 
     #[ORM\Id]
@@ -40,12 +44,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true)]
     private array $roles = [];
-
-    #[ORM\Column(type: DatePointType::NAME)]
-    private(set) DatePoint $createdAt;
-
-    #[ORM\Column(type: DatePointType::NAME, nullable: true)]
-    private(set) ?DatePoint $updatedAt = null;
 
     public function __construct()
     {

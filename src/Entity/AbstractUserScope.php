@@ -9,16 +9,18 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Clock\DatePoint;
 
 #[ORM\MappedSuperclass]
+#[ORM\UniqueConstraint(fields: ['user', 'school', 'scope'])]
 #[UniqueEntity(fields: ['user', 'school', 'scope'])]
-#[UniqueEntity(fields: ['school', 'scope'])]
 abstract class AbstractUserScope
 {
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false)]
     private(set) User $user;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: School::class)]
+    #[ORM\JoinColumn(nullable: false)]
     private(set) School $school;
 
     #[ORM\Column(type: DatePointType::NAME)]

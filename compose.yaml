@@ -10,7 +10,6 @@ services:
       - caddy_data:/data
       - ./docker/web/Caddyfile:/etc/frankenphp/Caddyfile:ro
       - ./docker/web/conf.d/20-app.dev.ini:/usr/local/etc/php/app.conf.d/20-app.dev.ini:ro
-      - ./docker/web/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint:ro
     ports:
       - "80:80"
       - "443:443/tcp"

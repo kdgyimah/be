@@ -19,6 +19,7 @@ class RefreshToken
     private(set) Uuid $id;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false)]
     private(set) User $user;
 
     #[ORM\Column(type: DatePointType::NAME)]

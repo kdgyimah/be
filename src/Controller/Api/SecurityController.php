@@ -3,7 +3,6 @@
 namespace App\Controller\Api;
 
 use App\Entity\RefreshToken;
-use App\Entity\User;
 use App\Service\RefreshTokenService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\Http\Cookie\JWTCookieProvider;
@@ -13,7 +12,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 #[Route('/api', name: 'api_', methods: 'POST')]
 class SecurityController
@@ -35,7 +33,6 @@ class SecurityController
         Request $request,
         RefreshTokenService $refreshTokenService,
         EntityManagerInterface $entityManager,
-        #[CurrentUser] User $currentUser,
         JWTTokenManagerInterface $JWTManager,
         #[Autowire(service: 'lexik_jwt_authentication.cookie_provider.yesman_jwt_hp')]
         JWTCookieProvider $JWTCookieProviderHp,
@@ -48,19 +45,15 @@ class SecurityController
         if (!empty($refreshTokenString)) {
             $refreshToken = $entityManager->getRepository(RefreshToken::class)->find($refreshTokenString);
 
-            if ($refreshToken?->user === $currentUser) {
-                $cookieProviders = [$JWTCookieProviderHp, $JWTCookieProviderS];
-                $token = $JWTManager->create($currentUser);
+            $cookieProviders = [$JWTCookieProviderHp, $JWTCookieProviderS];
+            $token = $JWTManager->create($refreshToken->user);
 
-                foreach ($cookieProviders as $cookieProvider) {
-                    $response->headers->setCookie($cookieProvider->createCookie($token));
-                }
-
-                return $response
-                    ->setStatusCode(Response::HTTP_NO_CONTENT);
+            foreach ($cookieProviders as $cookieProvider) {
+                $response->headers->setCookie($cookieProvider->createCookie($token));
             }
 
-            $refreshTokenService->removeCookie($response);
+            return $response
+                ->setStatusCode(Response::HTTP_NO_CONTENT);
         }
 
         return $response
