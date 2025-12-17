@@ -1,0 +1,42 @@
+when@dev: &config
+    nelmio_api_doc:
+        type_info: true
+        documentation:
+            info:
+                title: Yesman API
+                description: Yesman api doc for school, construction
+                version: '%env(APP_VERSION)%'
+            components:
+                securitySchemes:
+                    cookieAuthHp:
+                        type: apiKey
+                        in: cookie
+                        name: yesman_jwt_hp
+                    cookieAuthS:
+                        type: apiKey
+                        in: cookie
+                        name: yesman_jwt_s
+                    cookieRefresh:
+                        type: apiKey
+                        in: cookie
+                        name: yesman_refresh_token
+                schemas:
+                    ErrorResponse:
+                        type: object
+                        required: ['code', 'message']
+                        properties:
+                            code:
+                                type: integer
+                                example: 500
+                            message:
+                                type: string
+                                example: Internal Server Error
+            security:
+                - cookieAuthHp: []
+                  cookieAuthS: []
+
+        areas: # to filter documented areas
+            path_patterns:
+                - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
+
+when@inte: *config

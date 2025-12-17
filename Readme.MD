@@ -2,11 +2,12 @@
 
 ```console
 docker compose up -d --wait
+docker compose exec web php bin/console doctrine:schema:drop --force
 docker compose exec web php bin/console doctrine:schema:update --force
-docker compose exec web php bin/console doctrine:fixtures:load --quiet
+docker compose exec web php bin/console doctrine:fixtures:load --no-interaction
 ```
 
-## You also need to trust tls certificates:
+## Run this if you need to trust tls certificates
 
 ### Linux
 ```console
@@ -25,15 +26,5 @@ docker compose cp web:/data/caddy/pki/authorities/local/root.crt %TEMP%/root.crt
 
 # Api usage
 
-url: `https://localhost/api/login`
-
-```json
-{
-    "email": "dir@mariecurrie.com",
-    "password": "password",
-    "remember_me": "true"
-}
-```
-
->The remember me param decided whether to add the refresh token
+api doc: `https://localhost/api/doc`
 

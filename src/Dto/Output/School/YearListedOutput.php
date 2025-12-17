@@ -2,10 +2,9 @@
 
 namespace App\Dto\Output\School;
 
-use App\Entity\School\Year;
-use Symfony\Component\ObjectMapper\Attribute\Map;
+use Symfony\Component\JsonStreamer\Attribute\JsonStreamable;
 
-#[Map(source: Year::class)]
+#[JsonStreamable]
 class YearListedOutput
 {
     public string $id;

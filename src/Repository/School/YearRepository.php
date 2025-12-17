@@ -24,7 +24,7 @@ class YearRepository extends ServiceEntityRepository
      * @param School $school
      * @return iterable<Year>
      */
-    public function getAll(School $school): iterable
+    public function findBySchool(School $school): iterable
     {
         return $this->createQueryBuilder('y')
             ->andWhere('y.school = :school')

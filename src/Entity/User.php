@@ -109,4 +109,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Timesta
     {
         return $this->password;
     }
+
+    #[\Deprecated]
+    public function eraseCredentials(): void
+    {
+    }
 }

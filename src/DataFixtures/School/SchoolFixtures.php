@@ -4,14 +4,13 @@ namespace App\DataFixtures\School;
 
 use App\DataFixtures\UserFixtures;
 use App\Entity\School\School;
-use App\Entity\School\Year;
 use App\Entity\User;
 use App\Service\RoleManager\SchoolRoleManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\Clock\DatePoint;
 use Symfony\Component\HttpClient\CachingHttpClient;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Vich\UploaderBundle\FileAbstraction\ReplacingFile;
@@ -25,7 +24,7 @@ class SchoolFixtures extends Fixture implements DependentFixtureInterface
     public function __construct(
         private readonly SchoolRoleManager $schoolRoleManager,
         HttpClientInterface $httpClient,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
     ) {
         $this->httpClient = new CachingHttpClient($httpClient, $cache);
     }
@@ -53,6 +52,9 @@ class SchoolFixtures extends Fixture implements DependentFixtureInterface
             ->setEmail('ecole@example.com')
             ->setPhone('+886765675675')
             ->setTimezone('Europe/Paris');
+
+        $rp = new \ReflectionProperty($school, 'id');
+        $rp->setValue($school, new Uuid('019b1eb4-3ddb-7df2-ba27-c106e0728e63'));
 
         $this->setReference(SchoolFixtures::PM, $school);
 

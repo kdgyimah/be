@@ -4,7 +4,7 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.4",
+        "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-openssl": "*",
@@ -12,22 +12,27 @@
         "doctrine/doctrine-fixtures-bundle": "^4.3.1",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.5.8",
-        "lexik/jwt-authentication-bundle": "^3.x-dev",
+        "lexik/jwt-authentication-bundle": "^3.1.1",
+        "nelmio/api-doc-bundle": "^5.8.2",
         "nelmio/cors-bundle": "^2.6",
-        "symfony/console": "8.0.*",
-        "symfony/dotenv": "8.0.*",
-        "symfony/expression-language": "8.0.*",
+        "symfony/asset": "7.4.*",
+        "symfony/console": "7.4.*",
+        "symfony/dotenv": "7.4.*",
+        "symfony/expression-language": "7.4.*",
         "symfony/flex": "^2.10",
-        "symfony/framework-bundle": "8.0.*",
-        "symfony/http-client": "8.0.*",
-        "symfony/json-streamer": "8.0.*",
+        "symfony/framework-bundle": "7.4.*",
+        "symfony/http-client": "7.4.*",
+        "symfony/json-streamer": "7.4.*",
         "symfony/monolog-bundle": "^4.0.1",
-        "symfony/object-mapper": "8.0.*",
-        "symfony/runtime": "8.0.*",
-        "symfony/security-bundle": "8.0.*",
-        "symfony/uid": "8.0.*",
-        "symfony/validator": "8.0.*",
-        "symfony/yaml": "8.0.*",
+        "symfony/object-mapper": "7.4.*",
+        "symfony/runtime": "7.4.*",
+        "symfony/security-bundle": "7.4.*",
+        "symfony/type-info": "7.4.*",
+        "symfony/twig-bundle": "7.4.*",
+        "symfony/uid": "7.4.*",
+        "symfony/validator": "7.4.*",
+        "symfony/yaml": "7.4.*",
+        "twig/twig": "^2.12|^3.22.2",
         "vich/uploader-bundle": "^2.9.1"
     },
     "config": {
@@ -79,12 +84,17 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "8.0.*"
+            "require": "7.4.*"
         }
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^8.4",
         "fakerphp/faker": ">=1.24.1",
-        "symfony/debug-bundle": "8.0.*",
-        "symfony/web-profiler-bundle": "8.0.*"
+        "friendsofphp/php-cs-fixer": "^3.92.2",
+        "phpunit/phpunit": "^12.5",
+        "symfony/browser-kit": "7.4.*",
+        "symfony/css-selector": "7.4.*",
+        "symfony/debug-bundle": "7.4.*",
+        "symfony/web-profiler-bundle": "7.4.*"
     }
 }

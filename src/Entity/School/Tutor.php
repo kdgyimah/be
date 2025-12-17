@@ -20,7 +20,7 @@ class Tutor
     private(set) ?Uuid $id = null;
 
     /** @var Collection<StudentTutor> */
-    #[ORM\OneToMany(targetEntity: StudentTutor::class, mappedBy: 'student')]
+    #[ORM\OneToMany(targetEntity: StudentTutor::class, mappedBy: 'tutor')]
     private(set) Collection $students;
 
     public function __construct()

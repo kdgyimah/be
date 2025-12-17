@@ -35,7 +35,7 @@
 	header ?Permissions-Policy "browsing-topics=()"
 
 	request_header X-Sendfile-Type x-accel-redirect
-    request_header X-Accel-Mapping /var/share/dev/files=/app/var/share/dev/files
+	request_header X-Accel-Mapping /app/var/share/dev/files=/files
 
 	@phpRoute {
 		not file {path}

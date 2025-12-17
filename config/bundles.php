@@ -9,8 +9,10 @@ return [
     Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle::class => ['dev' => true, 'test' => true, 'inte' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
     Symfony\Bundle\DebugBundle\DebugBundle::class => ['dev' => true],
-    Symfony\Bundle\TwigBundle\TwigBundle::class => ['dev' => true, 'test' => true],
+    Symfony\Bundle\TwigBundle\TwigBundle::class => ['all' => true, 'prod' => false],
     Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true, 'test' => true],
     Vich\UploaderBundle\VichUploaderBundle::class => ['all' => true],
-    Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true],
+    Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true, 'prod' => false],
+    Nelmio\ApiDocBundle\NelmioApiDocBundle::class => ['all' => true, 'prod' => false],
+    DAMA\DoctrineTestBundle\DAMADoctrineTestBundle::class => ['test' => true],
 ];

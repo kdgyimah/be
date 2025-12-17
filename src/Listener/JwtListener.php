@@ -5,17 +5,13 @@ namespace App\Listener;
 use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Service\RefreshTokenService;
-use DateMalformedStringException;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTCreatedEvent;
 use Lexik\Bundle\JWTAuthenticationBundle\Events;
-use Psr\Log\LoggerInterface;
-use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Uid\Uuid;
 
 #[AsEventListener(event: Events::JWT_CREATED, method: 'onJWTCreated')]
 #[AsEventListener(event: Events::AUTHENTICATION_SUCCESS, method: 'onAuthenticationSuccess')]
@@ -26,7 +22,7 @@ readonly class JwtListener
         #[Autowire(param: 'refresh_token_ttl')]
         private int $refreshTokenTTL,
         private EntityManagerInterface $entityManager,
-        private RefreshTokenService $refreshTokenService
+        private RefreshTokenService $refreshTokenService,
     ) {
     }
 
@@ -61,17 +57,17 @@ readonly class JwtListener
         if (!empty($refreshTokenString)) {
             $refreshToken = $this->entityManager->getRepository(RefreshToken::class)->find($refreshTokenString);
 
-            if ($refreshToken?->isValid() === false) {
+            if (false === $refreshToken?->isValid()) {
                 $this->entityManager->remove($refreshToken);
                 $this->entityManager->flush();
                 $refreshToken = null;
             }
         }
 
-        if ($isRememberMe === false) {
+        if (false === $isRememberMe) {
             $this->refreshTokenService->removeCookie($event->getResponse());
 
-            if ($refreshToken !== null) {
+            if (null !== $refreshToken) {
                 $this->entityManager->remove($refreshToken);
                 $this->entityManager->flush();
             }
@@ -79,7 +75,7 @@ readonly class JwtListener
             return;
         }
 
-        if ($refreshToken === null) {
+        if (null === $refreshToken) {
             $refreshToken = new RefreshToken($this->refreshTokenTTL, $user);
             $this->entityManager->persist($refreshToken);
             $this->entityManager->flush();
