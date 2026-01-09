@@ -2,9 +2,9 @@
 
 ```console
 docker compose up -d --wait
-docker compose exec web composer install
 docker compose exec web php bin/console doctrine:database:drop --force
 docker compose exec web php bin/console doctrine:database:create
+docker compose exec web php bin/console doctrine:schema:update --force
 docker compose exec web php bin/console doctrine:fixtures:load --no-interaction
 ```
 

@@ -7,7 +7,7 @@ if [ "$WORKER" = true ]; then
 fi
 
 if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
-	if [ -z "$(ls -A 'vendor/' 2>/dev/null)" ] && [ "$APP_ENV" = 'dev' ]; then
+	if [ "$APP_ENV" = 'dev' ]; then
 	    composer install
 	fi
 

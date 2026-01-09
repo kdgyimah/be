@@ -11,8 +11,8 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Faker;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\Clock\DatePoint;
+use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProjectFixtures extends Fixture implements DependentFixtureInterface
@@ -50,7 +50,7 @@ class ProjectFixtures extends Fixture implements DependentFixtureInterface
             $manager->persist($project);
             $constraints = $this->validator->validate($project);
             if ($constraints->count() > 0) {
-                throw new ValidationException($constraints);
+                throw new ValidationFailedException($project, $constraints);
             }
 
             $this->addReference("engineer$i", $project);
