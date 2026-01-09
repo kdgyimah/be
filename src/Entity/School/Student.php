@@ -2,45 +2,45 @@
 
 namespace App\Entity\School;
 
+use App\Entity\Interface\TimestampableEntityInterface;
+use App\Entity\Trait\PrimaryKeyTrait;
+use App\Entity\Trait\TimestampableEntityTrait;
+use App\Listener\TimestampEntityListener;
 use App\Repository\School\StudentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Exception;
-use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
-use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Component\Uid\Uuid;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: StudentRepository::class)]
-#[ORM\HasLifecycleCallbacks]
 #[ORM\Table('school_student')]
-class Student
+#[ORM\EntityListeners([TimestampEntityListener::class])]
+class Student implements TimestampableEntityInterface
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[ORM\Column(type: UuidType::NAME, unique: true)]
-    private(set) ?Uuid $id = null;
+    use PrimaryKeyTrait;
+    use TimestampableEntityTrait;
 
     #[ORM\Column(type: Types::STRING, length: 255)]
-    private(set) string $firstname;
+    public private(set) string $firstname;
 
     #[ORM\Column(type: Types::STRING, length: 255)]
-    private(set) string $lastname;
+    public private(set) string $lastname;
 
     #[ORM\ManyToOne(targetEntity: School::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private(set) School $school;
+    public private(set) School $school;
+
+    #[ORM\Column(type: Types::BOOLEAN)]
+    public private(set) bool $male;
 
     /** @var Collection<StudentTutor> */
     #[ORM\OneToMany(targetEntity: StudentTutor::class, mappedBy: 'student')]
-    private(set) Collection $tutors;
+    public private(set) Collection $tutors;
 
-    public function __construct()
+    public function __construct(School $school)
     {
+        $this->school = $school;
         $this->tutors = new ArrayCollection();
     }
 
@@ -58,11 +58,13 @@ class Student
         return $this;
     }
 
-    /**
-     * @throws Exception
-     */
-    #[Assert\Callback]
-    #[ORM\PrePersist, ORM\PreUpdate]
+    public function setMale(bool $male): self
+    {
+        $this->male = $male;
+
+        return $this;
+    }
+
     public function validate(?ExecutionContextInterface $context): void
     {
         $count = $this->tutors->count();
@@ -71,8 +73,8 @@ class Student
             $context?->buildViolation('Un enfant doit avoir au moins 1 parent')
                 ->atPath('parents')
                 ->addViolation();
-            if ($context === null) {
-                throw new Exception('Un enfant doit avoir au moins 1 parent');
+            if (null === $context) {
+                throw new \Exception('Un enfant doit avoir au moins 1 parent');
             }
         }
 
@@ -80,8 +82,8 @@ class Student
             $context?->buildViolation('Un enfant doit avoir au plus 2 parents')
                 ->atPath('parents')
                 ->addViolation();
-            if ($context === null) {
-                throw new Exception('Un enfant doit avoir au plus 2 parents');
+            if (null === $context) {
+                throw new \Exception('Un enfant doit avoir au plus 2 parents');
             }
         }
     }

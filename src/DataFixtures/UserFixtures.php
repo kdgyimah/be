@@ -12,13 +12,13 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserFixtures extends Fixture
 {
-    public const string DIRECTOR = 'DIRECTOR';
+    public const string USER = 'USER';
 
     private readonly Faker\Generator $faker;
 
     public function __construct(
         private readonly UserPasswordHasherInterface $userPasswordHasher,
-        private readonly ValidatorInterface $validator
+        private readonly ValidatorInterface $validator,
     ) {
         $this->faker = Faker\Factory::create();
     }
@@ -35,18 +35,21 @@ class UserFixtures extends Fixture
         $manager->persist($user);
 
         $user = $this->createUser(
-            'firstname Dir',
-            'lastname Dir',
-            'dir@mariecurrie.com',
+            'user firstname',
+            'user lastname Dir',
+            'user@company.com',
         );
 
         $manager->persist($user);
-        $this->addReference(UserFixtures::DIRECTOR, $user);
 
-        for ($i = 0; $i < 10; $i++) {
-            $user = $this->createUser();
-            $manager->persist($user);
+        $constraint = $this->validator->validate($user);
+
+        if ($constraint->count() > 0) {
+            throw new ConstraintDefinitionException($constraint);
         }
+
+        $this->addReference(UserFixtures::USER, $user);
+
         $manager->flush();
     }
 
@@ -59,19 +62,15 @@ class UserFixtures extends Fixture
         $user = new User()
             ->setFirstname($firstname ?? $this->faker->firstName())
             ->setLastname($lastname ?? $this->faker->lastName())
-            ->setEmail($email ?? $this->faker->email());
+            ->setEmail($email ?? $this->faker->email())
+            ->setPhoneNumber($this->faker->e164PhoneNumber())
+        ;
 
         foreach ($roles as $role) {
             $user->addRole($role);
         }
 
-        $user->setPassword($this->userPasswordHasher->hashPassword($user,'password'));
-
-        $constraint = $this->validator->validate($user);
-
-        if ($constraint->count() > 0) {
-            throw new ConstraintDefinitionException($constraint);
-        }
+        $user->setPassword($this->userPasswordHasher->hashPassword($user, 'password'));
 
         return $user;
     }

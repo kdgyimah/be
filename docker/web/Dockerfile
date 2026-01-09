@@ -4,9 +4,9 @@ FROM dunglas/frankenphp:php8.5 AS frankenphp_base
 
 ENV TZ="Europe/Paris"
 
-WORKDIR /app
+ENV WORKER=false
 
-VOLUME /app/var/share
+WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     file \
@@ -78,6 +78,8 @@ ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
 
 RUN set -eux; \
-    mkdir -p var/cache var/log; \
+    mkdir -p var/cache var/log var/share; \
     composer dump-autoload --classmap-authoritative --no-dev; \
-    chmod +x bin/console;
+    chmod +x bin/console; \
+
+VOLUME /app/var/share

@@ -2,11 +2,10 @@
 
 namespace App\Entity\Invitation;
 
+use App\Entity\Trait\PrimaryKeyTrait;
+use App\Listener\TimestampEntityListener;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
-use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
@@ -15,22 +14,19 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\DiscriminatorMap([
     'school' => SchoolInvitation::class,
 ])]
+#[ORM\EntityListeners([TimestampEntityListener::class])]
 abstract class RegisterInvitation
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[ORM\Column(type: UuidType::NAME, unique: true)]
-    private(set) ?Uuid $id = null;
+    use PrimaryKeyTrait;
 
     #[Assert\Email]
     #[ORM\Column(type: Types::STRING)]
-    private(set) string $email;
+    public private(set) string $email;
 
     public function __construct(string $email)
     {
         $this->email = $email;
     }
 
-    abstract function getModule(): mixed;
+    abstract public function getModule(): mixed;
 }

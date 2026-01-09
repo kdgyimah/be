@@ -2,8 +2,8 @@
 
 ```console
 docker compose up -d --wait
-docker compose exec web php bin/console doctrine:schema:drop --force
-docker compose exec web php bin/console doctrine:schema:update --force
+docker compose exec web php bin/console doctrine:database:drop --force
+docker compose exec web php bin/console doctrine:database:create
 docker compose exec web php bin/console doctrine:fixtures:load --no-interaction
 ```
 
@@ -27,4 +27,10 @@ docker compose cp web:/data/caddy/pki/authorities/local/root.crt %TEMP%/root.crt
 # Api usage
 
 api doc: `https://localhost/api/doc`
+
+the reference user infos are:
+
+>email → user@company.com
+>
+>password → password
 

@@ -2,28 +2,40 @@
 
 namespace App\Entity\School;
 
+use App\Entity\Interface\TimestampableEntityInterface;
+use App\Entity\Trait\TimestampableEntityTrait;
+use App\Listener\TimestampEntityListener;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\JoinColumn;
 
 #[ORM\Entity]
 #[ORM\Table('school_student_tutor')]
-class StudentTutor
+#[ORM\EntityListeners([TimestampEntityListener::class])]
+class StudentTutor implements TimestampableEntityInterface
 {
+    use TimestampableEntityTrait;
+
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Student::class, inversedBy: 'tutors')]
-    #[JoinColumn(nullable: false)]
-    private(set) Student $student;
+    public private(set) Student $student;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Tutor::class, inversedBy: 'students')]
-    #[JoinColumn(nullable: false)]
-    private(set) Tutor $tutor;
+    public private(set) Tutor $tutor;
 
     #[ORM\Column(type: Types::BOOLEAN)]
-    private(set) bool $canContact = false;
+    public private(set) bool $canContact = false;
 
-    public function __construct()
+    public function __construct(Tutor $tutor, Student $student)
     {
+        $this->student = $student;
+        $this->tutor = $tutor;
+    }
+
+    public function setCanContact(bool $canContact): self
+    {
+        $this->canContact = $canContact;
+
+        return $this;
     }
 }

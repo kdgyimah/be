@@ -1,5 +1,11 @@
 #!/bin/sh
 set -e
+
+if [ "$WORKER" = true ]; then
+	echo "Worker mode detected, starting messenger consumer..."
+    exec php bin/console messenger:consume --all -vv --time-limit=60 --limit=10 --memory-limit=128M
+fi
+
 if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	if [ -z "$(ls -A 'vendor/' 2>/dev/null)" ] && [ "$APP_ENV" = 'dev' ]; then
 	    composer install
@@ -48,7 +54,7 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		echo 'The database is now ready and reachable'
 	fi
 
-	if [ "$(find ./migrations -iname '*.php' -print -quit)" ] && ["$APP_ENV" != 'dev' ]; then
+	if [ "$(find ./migrations -iname '*.php' -print -quit)" ] && [ "$APP_ENV" != 'dev' ]; then
 		php bin/console doctrine:migrations:migrate --no-interaction --all-or-nothing
 	fi
 

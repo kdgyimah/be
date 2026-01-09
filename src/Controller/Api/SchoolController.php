@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Controller\Trait\ListInputTrait;
 use App\Dto\Output\School\SchoolListedOutput;
 use App\Dto\Output\School\StudentListedOutput;
 use App\Dto\Output\School\YearListedOutput;
@@ -9,10 +10,8 @@ use App\Entity\School\School;
 use App\Entity\School\Year;
 use App\Entity\User;
 use App\Enum\ErrorCode;
-use App\Repository\School\StudentYearRepository;
-use App\Repository\School\UserScopeRepository;
-use App\Repository\School\YearRepository;
 use App\Security\Voter\SchoolVoter;
+use App\Service\School\SchoolService;
 use App\Service\School\StudentService;
 use App\Service\School\YearService;
 use Nelmio\ApiDocBundle\Attribute\Model;
@@ -25,7 +24,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\JsonStreamer\StreamWriterInterface;
-use Symfony\Component\ObjectMapper\ObjectMapperInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -51,6 +49,8 @@ use Vich\UploaderBundle\Storage\FileSystemStorage;
 #[Route('/api/schools', name: 'api_school_', requirements: ['id' => '^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$'], format: 'json')]
 class SchoolController
 {
+    use ListInputTrait;
+
     #[OA\Response(
         response: Response::HTTP_OK,
         description: 'list of all manages schools',
@@ -64,19 +64,18 @@ class SchoolController
     #[IsGranted('ROLE_USER')]
     #[Route('', name: 'list', methods: Request::METHOD_GET)]
     public function list(
-        UserScopeRepository $userScopeRepository,
-        ObjectMapperInterface $objectMapper,
         #[CurrentUser] User $currentUser,
-    ): JsonResponse {
-        $res = [];
+        SchoolService $schoolService,
+        StreamWriterInterface $jsonStreamWriter,
+    ): Response {
+        $res = $schoolService->getSchools($currentUser);
 
-        $userScopes = $userScopeRepository->findSchools($currentUser);
+        $json = $jsonStreamWriter->write(
+            $res,
+            Type::iterable(Type::object(SchoolListedOutput::class), Type::int())
+        );
 
-        foreach ($userScopes as $userScope) {
-            $res[] = $objectMapper->map($userScope->school, SchoolListedOutput::class);
-        }
-
-        return new JsonResponse($res);
+        return new StreamedResponse($json, headers: ['Content-Type' => 'application/json']);
     }
 
     #[OA\Parameter(
@@ -226,45 +225,18 @@ class SchoolController
     public function listStudents(
         #[MapEntity(message: 'The year is not found')] Year $year,
         Request $request,
-        StudentYearRepository $studentYearRepository,
         StudentService $studentService,
         StreamWriterInterface $jsonStreamWriter,
     ): Response {
-        $page = $request->query->get('page', 1);
-        $count = $request->query->get('count', 10);
+        $listInput = $this->getListInput($request);
 
-        if ($page < 1 || !is_int($page)) {
-            return new JsonResponse(
-                [
-                    'code' => ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_PAGE,
-                    'message' => 'The page parameter is invalid',
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
+        $students = $studentService->getAllByYear($year, $listInput);
 
-        if ($count < 1 || $count > 100 || !is_int($count)) {
-            return new JsonResponse(
-                [
-                    'code' => ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_COUNT,
-                    'message' => 'The count parameter is invalid',
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $studentsPaginator = $studentYearRepository->findByYear($year, $page, $count);
-
-        $students = $studentService->generateStudentListedOutput($studentsPaginator->getIterator());
-
-        $json = $jsonStreamWriter->write(
-            ['data' => iterator_to_array($students), 'total' => $studentYearRepository->countByYear($year)],
-            Type::arrayShape([
-                'data' => Type::list(Type::object(StudentListedOutput::class)),
-                'total' => Type::int(),
-            ])
+        return $this->getListResponse(
+            $students,
+            $studentService->countAllByYear($year),
+            $jsonStreamWriter,
+            StudentListedOutput::class
         );
-
-        return new StreamedResponse($json, headers: ['Content-Type' => 'application/json']);
     }
 }

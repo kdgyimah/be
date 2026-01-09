@@ -3,5 +3,6 @@
   <component name="Symfony2PluginSettings">
     <option name="directoryToApp" value="config" />
     <option name="pluginEnabled" value="true" />
+    <option name="lastServiceGeneratorLanguage" value="yaml" />
   </component>
 </project>

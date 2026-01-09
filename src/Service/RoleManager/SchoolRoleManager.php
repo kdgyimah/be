@@ -6,46 +6,32 @@ use App\Entity\School\School;
 use App\Entity\School\UserScope;
 use App\Entity\User;
 use App\Enum\SchoolScope;
+use App\Repository\School\UserScopeRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
 
 final readonly class SchoolRoleManager
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private LoggerInterface $logger
+        private UserScopeRepository $userScopeRepository,
     ) {
     }
 
     public function setDirector(School $school, User $user): void
     {
-        $currentUserScopes = $this->entityManager
-            ->getRepository(UserScope::class)
-            ->findBy(['school' => $school, 'scope' => SchoolScope::DIRECTOR]);
-
-        $exists = false;
-
-        if (count($currentUserScopes) > 1) {
-            $this->logger->error(sprintf('school %s has many directors', $school->id));
-        }
-
-        foreach ($currentUserScopes as $currentUserScope) {
-            if ($currentUserScope->user === $user) {
-                $exists = true;
-                break;
-            }
-        }
-
-        if ($exists) {
+        if (null !== $user->id && $school->director->id === $user->id) {
             return;
         }
 
-        foreach ($currentUserScopes as $currentUserScope) {
-            $this->entityManager->remove($currentUserScope);
+        $this->userScopeRepository->deleteRoles($school, $school->director);
+
+        foreach (SchoolScope::cases() as $schoolScope) {
+            $scope = new UserScope($user, $school, $schoolScope);
+            $this->entityManager->persist($scope);
         }
 
-        $currentUserScope = new UserScope($user, $school, SchoolScope::DIRECTOR);
-        $this->entityManager->persist($currentUserScope);
+        $school->setDirector($user);
+
         $this->entityManager->flush();
     }
 }

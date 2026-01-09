@@ -12,3 +12,17 @@ vich_uploader:
                 service: Vich\UploaderBundle\Naming\PropertyNamer
                 options:
                     property: 'id'
+
+        workers_pp:
+            upload_destination: '%kernel.share_dir%/files/school/workers'
+            namer:
+                service: Vich\UploaderBundle\Naming\PropertyNamer
+                options:
+                    property: 'id'
+
+        engineers_pp:
+            upload_destination: '%kernel.share_dir%/files/school/engineers'
+            namer:
+                service: Vich\UploaderBundle\Naming\PropertyNamer
+                options:
+                    property: 'id'

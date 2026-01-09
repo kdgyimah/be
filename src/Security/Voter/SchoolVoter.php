@@ -15,15 +15,13 @@ class SchoolVoter extends Voter
     public const string SHOW = SchoolVoter::class.':show';
     public const string MANAGE_STUDENTS = SchoolVoter::class.':manageStudents';
 
-    public function __construct(private readonly UserScopeRepository $userScopeRepository)
+    public function __construct(private readonly UserScopeRepository $schoolUserScope)
     {
     }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        $subjectType = is_object($subject) ? get_class($subject) : get_debug_type($subject);
-
-        return $this->supportsAttribute($attribute) && $this->supportsType($subjectType);
+        return $this->supportsAttribute($attribute) && $this->supportsType(get_debug_type($subject));
     }
 
     public function supportsAttribute(string $attribute): bool
@@ -33,16 +31,15 @@ class SchoolVoter extends Voter
 
     public function supportsType(string $subjectType): bool
     {
-        return is_a($subjectType, School::class, true) || $subjectType === 'null';
+        return is_a($subjectType, School::class, true) || 'null' === $subjectType;
     }
 
     protected function voteOnAttribute(
         string $attribute,
         mixed $subject,
         TokenInterface $token,
-        ?Vote $vote = null
+        ?Vote $vote = null,
     ): bool {
-        /** @var ?User $user */
         $user = $token->getUser();
 
         if (!$user instanceof User) {
@@ -58,14 +55,12 @@ class SchoolVoter extends Voter
         }
 
         return match ($attribute) {
-            SchoolVoter::SHOW => $this->userScopeRepository->count(['user' => $user, 'school' => $subject->id]) > 0,
-            SchoolVoter::MANAGE_STUDENTS => $this->userScopeRepository->count(
-                    [
-                        'user' => $user,
-                        'school' => $subject->id,
-                        'scope' => [SchoolScope::MANAGE_STUDENTS, SchoolScope::DIRECTOR],
-                    ]
-                ) > 0,
+            SchoolVoter::SHOW => $this->schoolUserScope->count(['user' => $user, 'school' => $subject->id]) > 0,
+            SchoolVoter::MANAGE_STUDENTS => $this->schoolUserScope->count([
+                'user' => $user,
+                'school' => $subject->id,
+                'scope' => SchoolScope::MANAGE_STUDENTS,
+            ]) > 0,
             default => false,
         };
     }

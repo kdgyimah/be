@@ -4,6 +4,7 @@ namespace App\Tests\Unit\Service\School;
 
 use App\Entity\School\School;
 use App\Entity\School\Year;
+use App\Entity\User;
 use App\Repository\School\YearRepository;
 use App\Service\KeyService;
 use App\Service\School\YearService;
@@ -45,7 +46,7 @@ class YearServiceTest extends TestCase
 
     public function testGetYearByNameFound(): void
     {
-        $school = new School();
+        $school = new School(new User());
         $yearName = '2023-2024';
         $year = new Year($school);
 
@@ -60,7 +61,7 @@ class YearServiceTest extends TestCase
 
     public function testGetYearByNameNotFound(): void
     {
-        $school = new School();
+        $school = new School(new User());
         $yearName = '2099-3000';
 
         $this->yearRepository->expects($this->once())
@@ -73,7 +74,7 @@ class YearServiceTest extends TestCase
 
     public function testGetYearDefaultCacheHit(): void
     {
-        $school = new School();
+        $school = new School(new User());
         // Setup school ID mock or reflection if needed. Assuming key service works on object.
         $this->keyService->expects($this->once())
             ->method('getYearActiveKey')
@@ -99,7 +100,7 @@ class YearServiceTest extends TestCase
 
     public function testGetYearDefaultCacheMiss(): void
     {
-        $school = new School();
+        $school = new School(new User());
         $this->keyService->expects($this->once())
             ->method('getYearActiveKey')
             ->willReturn('school-active-year');

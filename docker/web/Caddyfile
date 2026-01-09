@@ -35,7 +35,21 @@
 	header ?Permissions-Policy "browsing-topics=()"
 
 	request_header X-Sendfile-Type x-accel-redirect
-	request_header X-Accel-Mapping /app/var/share/dev/files=/files
+	request_header X-Accel-Mapping /app/var/share/{$APP_ENV}/=/
+
+	intercept {
+    	@accel header X-Accel-Redirect *
+    	handle_response @accel {
+    	    root /app/var/share/{$APP_ENV}
+    		rewrite * {resp.header.X-Accel-Redirect}
+    		method * GET
+
+    		# Remove the X-Accel-Redirect header set by PHP for increased security
+    		header -X-Accel-Redirect
+
+    		file_server
+    	}
+    }
 
 	@phpRoute {
 		not file {path}

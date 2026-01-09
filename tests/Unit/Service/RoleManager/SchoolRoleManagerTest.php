@@ -22,27 +22,40 @@ class SchoolRoleManagerTest extends TestCase
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->logger = $this->createMock(LoggerInterface::class);
-        $this->manager = new SchoolRoleManager($this->entityManager, $this->logger);
+        $userScopeRepository = $this->createMock(\App\Repository\School\UserScopeRepository::class);
+        $this->manager = new SchoolRoleManager($this->entityManager, $userScopeRepository);
     }
 
     public function testSetDirectorAlreadyDirector(): void
     {
-        $school = new School();
-        $user = new User();
+        $director = new User();
+        $refId = new \ReflectionProperty(User::class, 'id');
+        $refId->setValue($director, \Symfony\Component\Uid\Uuid::v4());
+        $school = new School($director);
+
+        $user = $director; // The user IS the director
+        // Update user variable to refer to same object or just ensure IDs match.
+        // Actually, logic is: setDirector($school, $user).
+        // If $user IS the director, it should return early.
+        // So I must pass the SAME user instance (or same ID).
+        // The test was: $user = new User(). $school = new School(new User()).
+        // Those are different users. So it didn't return early.
+        // FIX: make school director be $user.
         $userScope = new UserScope($user, $school, SchoolScope::DIRECTOR);
 
         $repository = $this->createMock(EntityRepository::class);
-        $repository->expects($this->once())
-            ->method('findBy')
-            ->with(['school' => $school, 'scope' => SchoolScope::DIRECTOR])
-            ->willReturn([$userScope]);
+        $repository->expects($this->never())
+            ->method('findBy');
 
-        $this->entityManager->expects($this->once())
-            ->method('getRepository')
-            ->with(UserScope::class)
-            ->willReturn($repository);
+        // Since it returns early, it shouldn't even ask for repository IF logic checks IDs first.
+        // Logic:
+        // if ($user->id && $school->director->id === $user->id) return;
+        // ...
+        // $this->userScopeRepository->deleteRoles...
+        // Wait, does deleteRoles prevent getRepository?
+        // Ideally, we expect NO interactions with EM or Repo if it returns early.
 
+        $this->entityManager->expects($this->never())->method('getRepository');
         $this->entityManager->expects($this->never())->method('remove');
         $this->entityManager->expects($this->never())->method('persist');
 
@@ -51,7 +64,7 @@ class SchoolRoleManagerTest extends TestCase
 
     public function testSetDirectorNewDirectorReplacesOld(): void
     {
-        $school = new School();
+        $school = new School(new User());
         // Since we cannot easily set ID on School if it's protected, lets hope Logger doesn't crash on null ID if it uses it.
         // The logger call: sprintf('school %s has many directors', $school->id)
         // If ID is uninitialized, it might be an issue. But usually UUIDs are strings or Uuid objects.
@@ -61,22 +74,28 @@ class SchoolRoleManagerTest extends TestCase
         $oldUser = new User();
         $oldScope = new UserScope($oldUser, $school, SchoolScope::DIRECTOR);
 
-        $repository = $this->createMock(EntityRepository::class);
-        $repository->expects($this->once())
-            ->method('findBy')
-            ->with(['school' => $school, 'scope' => SchoolScope::DIRECTOR])
-            ->willReturn([$oldScope]);
+        // We need to access the injected repository mock
+        $ref = new \ReflectionProperty(SchoolRoleManager::class, 'userScopeRepository');
+        $userScopeRepositoryMock = $ref->getValue($this->manager);
 
-        $this->entityManager->expects($this->once())
-            ->method('getRepository')
-            ->with(UserScope::class)
-            ->willReturn($repository);
+        $userScopeRepositoryMock->expects($this->once())
+            ->method('deleteRoles')
+            ->with($school, $this->anything()); // We cannot easily match the exact user object if it's created inside logic, but here it uses $school->director which is available.
 
-        $this->entityManager->expects($this->once())->method('remove')->with($oldScope);
-        $this->entityManager->expects($this->once())
+        // Repository is injected, so we don't expect EM to get it.
+        $this->entityManager->expects($this->never())->method('getRepository');
+
+        // deleteRoles handles removal, so EM->remove is not called directly here (unless deleteRoles calls it, but we mock deleteRoles)
+        $this->entityManager->expects($this->never())->method('remove');
+        $count = count(SchoolScope::cases());
+        $this->entityManager->expects($this->exactly($count))
             ->method('persist')
             ->with($this->callback(function (UserScope $us) use ($user, $school) {
-                return $us->user === $user && $us->school === $school && SchoolScope::DIRECTOR === $us->getScope();
+                $ref = new \ReflectionProperty(UserScope::class, 'school');
+                $actualSchool = $ref->getValue($us);
+                // Check if scope is valid SchoolScope enum
+                $hasValidScope = in_array($us->getScope(), SchoolScope::cases(), true);
+                return $us->user === $user && $actualSchool === $school && $hasValidScope;
             }));
 
         $this->manager->setDirector($school, $user);

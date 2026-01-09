@@ -2,21 +2,28 @@
 
 namespace App\Tests\Unit\Service\School;
 
+use App\Dto\Input\ListInput;
 use App\Dto\Output\School\StudentListedOutput;
 use App\Entity\School\Grade;
 use App\Entity\School\Level;
+use App\Entity\School\School;
 use App\Entity\School\Student;
-use App\Entity\School\StudentYear;
+use App\Entity\School\GradeYear;
+use App\Entity\School\Year;
+use App\Entity\User;
+use App\Repository\School\GradeYearRepository;
 use App\Service\School\StudentService;
 use PHPUnit\Framework\TestCase;
 
 class StudentServiceTest extends TestCase
 {
-    public function testGenerateStudentListedOutput(): void
+    public function testGetAllByYear(): void
     {
-        $service = new StudentService();
+        $gradeYearRepository = $this->createMock(GradeYearRepository::class);
+        $service = new StudentService($gradeYearRepository);
 
-        $student = new Student();
+        $school = new School(new User());
+        $student = new Student($school);
         $student->setFirstname('John');
         $student->setLastname('Doe');
 
@@ -24,17 +31,23 @@ class StudentServiceTest extends TestCase
         $refGradeName = new \ReflectionProperty(Grade::class, 'name');
         $refGradeName->setValue($grade, '1st Grade');
 
-        $studentYear = $this->createMock(StudentYear::class);
-        // We can't set readonly properties on mock easily if they are public readonly?
-        // StudentYear properties accessed: $studentYear->student, $studentYear->grade.
-        // If they are public readonly, we can try to set them on a real object via reflection.
+        $year = $this->createMock(Year::class);
+        $levelYear = $this->createMock(\App\Entity\School\LevelYear::class);
+        $refLevelYearYear = new \ReflectionProperty(\App\Entity\School\LevelYear::class, 'year');
+        $refLevelYearYear->setValue($levelYear, $year);
+        $studentYearReal = new GradeYear($levelYear, $grade, $student);
 
-        $year = $this->createMock(\App\Entity\School\Year::class);
-        $studentYearReal = new StudentYear($year, $grade, $student);
+        $listInput = new ListInput(1, 10);
 
-        $iterable = [$studentYearReal];
+        $paginator = $this->createMock(\Doctrine\ORM\Tools\Pagination\Paginator::class);
+        $paginator->method('getIterator')->willReturn(new \ArrayIterator([$studentYearReal]));
 
-        $result = $service->generateStudentListedOutput($iterable);
+        $gradeYearRepository->expects($this->once())
+            ->method('findByYear')
+            ->with($year, 1, 10)
+            ->willReturn($paginator);
+
+        $result = $service->getAllByYear($year, $listInput);
         $resultArray = iterator_to_array($result);
 
         $this->assertCount(1, $resultArray);

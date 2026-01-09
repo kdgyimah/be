@@ -23,6 +23,7 @@ class SecurityControllerTest extends WebTestCase
         $user->setPassword(self::getContainer()->get('security.user_password_hasher')->hashPassword($user, 'password'));
         $user->setFirstname('Login');
         $user->setLastname('Success');
+        $user->setPhoneNumber('0700000000');
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -65,6 +66,7 @@ class SecurityControllerTest extends WebTestCase
         $user->setPassword('$2y$13$...');
         $user->setFirstname('Refresh');
         $user->setLastname('User');
+        $user->setPhoneNumber('0600000000');
         $this->entityManager->persist($user);
 
         // Create a valid RefreshToken

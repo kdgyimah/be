@@ -2,36 +2,42 @@
 
 namespace App\Entity;
 
-use App\Entity\School\School;
+use App\Entity\Construction\UserScope as ConstructionUserScope;
+use App\Entity\Interface\TimestampableEntityInterface;
+use App\Entity\School\UserScope as SchoolUserScope;
+use App\Entity\Trait\PrimaryKeyTrait;
+use App\Entity\Trait\TimestampableEntityTrait;
+use App\Repository\School\UserScopeRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Types\DatePointType;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Clock\DatePoint;
 
-#[ORM\MappedSuperclass]
-#[ORM\UniqueConstraint(fields: ['user', 'school', 'scope'])]
-#[UniqueEntity(fields: ['user', 'school', 'scope'])]
-abstract class AbstractUserScope
+#[ORM\Entity(repositoryClass: UserScopeRepository::class)]
+#[ORM\Table(name: 'user_scope')]
+#[ORM\InheritanceType('SINGLE_TABLE')]
+#[ORM\DiscriminatorColumn(name: 'disc', type: Types::STRING)]
+#[ORM\DiscriminatorMap(['school' => SchoolUserScope::class, 'construction' => ConstructionUserScope::class])]
+abstract class AbstractUserScope implements TimestampableEntityInterface
 {
-    #[ORM\Id]
+    use PrimaryKeyTrait;
+    use TimestampableEntityTrait;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private(set) User $user;
+    public private(set) User $user;
 
-    #[ORM\Id]
-    #[ORM\ManyToOne(targetEntity: School::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private(set) School $school;
+    #[ORM\Column(type: Types::STRING, length: 40)]
+    public private(set) string $scope;
 
-    #[ORM\Column(type: DatePointType::NAME)]
-    private(set) DatePoint $createdAt;
-
-    public function __construct(User $user, School $school)
+    public function __construct(User $user, \BackedEnum $scope)
     {
+        $this->scope = $scope->value;
         $this->user = $user;
-        $this->school = $school;
-        $this->createdAt = new DatePoint();
     }
 
-    abstract public function getScope(): \BackedEnum;
+    abstract public function getScope(): mixed;
+
+    protected function getStringScope(): string
+    {
+        return $this->scope;
+    }
 }

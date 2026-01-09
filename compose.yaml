@@ -22,6 +22,7 @@ services:
       COMPOSER_HOME: /composer
       XDEBUG_MODE: off
       FRANKENPHP_WORKER_CONFIG: watch
+      PHP_IDE_CONFIG: serverName=backend
       #symfony
       DATABASE_URL: postgresql://yesman:yesman@database:5432/yesman?serverVersion=18&charset=utf8
     extra_hosts:
@@ -38,6 +39,24 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+
+  worker:
+    scale: 2
+    profiles:
+      - donotstart
+    build:
+      dockerfile: docker/web/Dockerfile
+      target: frankenphp_dev
+    restart: unless-stopped
+    environment:
+      WORKER: true
+    healthcheck:
+      disable: false
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - ./:/app
 
 volumes:
   postgres_data: {}

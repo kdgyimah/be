@@ -34,3 +34,4 @@ config/secrets/prod/prod.decrypt.private.php
 .idea
 node_modules/
 .nvmrc
+phpunit.dist.xml

@@ -3,7 +3,9 @@
 namespace App\Command;
 
 use App\Entity\School\School;
+use App\Entity\School\UserScope;
 use App\Entity\User;
+use App\Enum\SchoolScope;
 use App\Service\RoleManager\SchoolRoleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -36,8 +38,13 @@ class CreateAdminCommand extends Command
 
         $user->setPassword($this->passwordHasher->hashPassword($user, 'password'));
 
-        $school = $schoolRepository->findOneBy(['name' => 'Pierre et marie currie']) ?? new School()
+        $school = $schoolRepository->findOneBy(['name' => 'Pierre et marie currie']) ?? new School($user)
             ->setName('Pierre et marie currie');
+
+        foreach (SchoolScope::cases() as $schoolScope) {
+            $scope = new UserScope($user, $school, $schoolScope);
+            $this->entityManager->persist($scope);
+        }
 
         $this->entityManager->persist($school);
         $this->entityManager->persist($user);

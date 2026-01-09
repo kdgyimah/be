@@ -9,8 +9,12 @@ use Symfony\Component\Clock\DatePoint;
 trait TimestampableEntityTrait
 {
     #[ORM\Column(type: DatePointType::NAME)]
-    private(set) DatePoint $createdAt;
+    private DatePoint $createdAt {
+        get => $this->createdAt;
+    }
 
     #[ORM\Column(type: DatePointType::NAME, nullable: true)]
-    private(set) ?DatePoint $updatedAt = null;
+    private ?DatePoint $updatedAt = null {
+        get => $this->updatedAt;
+    }
 }

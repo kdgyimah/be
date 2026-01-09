@@ -2,33 +2,39 @@
 
 namespace App\Entity\School;
 
+use App\Entity\Interface\TimestampableEntityInterface;
+use App\Entity\Trait\PrimaryKeyTrait;
+use App\Entity\Trait\TimestampableEntityTrait;
+use App\Listener\TimestampEntityListener;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\JoinColumn;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'school_level_year')]
-class LevelYear
+#[ORM\UniqueConstraint(fields: ['level', 'year'])]
+#[ORM\EntityListeners([TimestampEntityListener::class])]
+class LevelYear implements TimestampableEntityInterface
 {
-    #[ORM\Id]
-    #[ORM\ManyToOne(targetEntity: Level::class)]
-    #[JoinColumn(nullable: false)]
-    private(set) Level $level;
+    use PrimaryKeyTrait;
+    use TimestampableEntityTrait;
 
-    #[ORM\Id]
+    #[ORM\ManyToOne(targetEntity: Level::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    public private(set) Level $level;
+
     #[ORM\ManyToOne(targetEntity: Year::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private(set) Year $year;
+    public private(set) Year $year;
 
     #[ORM\Column(type: Types::FLOAT)]
-    private(set) float $inscriptionFees;
+    public private(set) float $inscriptionFees;
 
     #[ORM\Column(type: Types::FLOAT)]
-    private(set) float $tuitionFees;
+    public private(set) float $tuitionFees;
 
     /** @var array<string, float> */
     #[ORM\Column(type: Types::JSON)]
-    private(set) array $additionalFees = [];
+    public private(set) array $additionalFees = [];
 
     public function __construct(Level $level, Year $year)
     {
@@ -52,7 +58,6 @@ class LevelYear
 
     /**
      * @param array<string, float> $additionalFees
-     * @return LevelYear
      */
     public function setAdditionalFees(array $additionalFees): self
     {

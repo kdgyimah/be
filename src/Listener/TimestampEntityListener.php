@@ -3,25 +3,47 @@
 namespace App\Listener;
 
 use App\Entity\Interface\TimestampableEntityInterface;
-use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
-use Doctrine\ORM\Events;
-use ReflectionProperty;
 use Symfony\Component\Clock\DatePoint;
 
-#[AsEntityListener(event: Events::preUpdate, method: 'preUpdate', entity: TimestampableEntityInterface::class)]
-#[AsEntityListener(event: Events::prePersist, method: 'prePersist', entity: TimestampableEntityInterface::class)]
+#[AsEntityListener(lazy: true)]
 readonly class TimestampEntityListener
 {
-    public function preUpdate(User $user): void
+    public function preUpdate(TimestampableEntityInterface $entity): void
     {
-        $rp = new ReflectionProperty(User::class, 'updatedAt');
-        $rp->setValue($user, new DatePoint());
+        $rp = $this->getReflectionProperty($entity, 'updatedAt');
+        $rp->setValue($entity, new DatePoint());
     }
 
-    public function prePersist(User $user): void
+    public function prePersist(TimestampableEntityInterface $entity): void
     {
-        $rp = new ReflectionProperty(User::class, 'createdAt');
-        $rp->setValue($user, new DatePoint());
+        $rp = $this->getReflectionProperty($entity, 'createdAt');
+
+        $rp->setValue($entity, new DatePoint());
+    }
+
+    private function getReflectionProperty(TimestampableEntityInterface $entity, string $propertyName): \ReflectionProperty
+    {
+        $rc = new \ReflectionClass($entity);
+        $className = $rc->getName();
+
+        foreach ($rc->getProperties() as $property) {
+            if ($propertyName === $property->getName()) {
+                return $property;
+            }
+        }
+
+        $rc = $rc->getParentClass();
+
+        while (false !== $rc) {
+            foreach ($rc->getProperties() as $property) {
+                if ($propertyName === $property->getName()) {
+                    return $property;
+                }
+            }
+            $rc = $rc->getParentClass();
+        }
+
+        throw new \LogicException("$className doesn't have $propertyName attribute");
     }
 }

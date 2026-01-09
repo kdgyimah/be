@@ -2,6 +2,9 @@
 
 namespace App\Entity\School;
 
+use App\Entity\Interface\TimestampableEntityInterface;
+use App\Entity\Trait\TimestampableEntityTrait;
+use App\Listener\TimestampEntityListener;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
@@ -10,28 +13,30 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
 #[ORM\Table('school_payment')]
-class Payment
+#[ORM\EntityListeners([TimestampEntityListener::class])]
+class Payment implements TimestampableEntityInterface
 {
+    use TimestampableEntityTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
-    private(set) ?Uuid $id = null;
-
-    #[ORM\ManyToOne(targetEntity: StudentYear::class, inversedBy: 'payments')]
-    #[ORM\JoinColumn(nullable: false)]
-    private(set) StudentYear $studentYear;
+    public private(set) ?Uuid $id = null;
 
     #[ORM\Column(type: Types::FLOAT)]
-    private(set) float $amount;
+    public private(set) float $amount;
 
     #[ORM\Column(type: Types::STRING)]
-    private(set) string $fees;
+    public private(set) string $type;
 
-    public function __construct(StudentYear $studentYear, float $amount, string $fees)
+    #[ORM\ManyToOne(targetEntity: GradeYear::class, inversedBy: 'payments')]
+    public private(set) GradeYear $gradeYear;
+
+    public function __construct(GradeYear $gradeYear, float $amount, string $type)
     {
-        $this->studentYear = $studentYear;
+        $this->gradeYear = $gradeYear;
         $this->amount = $amount;
-        $this->fees = $fees;
+        $this->type = $type;
     }
 }
