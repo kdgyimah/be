@@ -45,8 +45,9 @@ class ProjectFixtures extends Fixture implements DependentFixtureInterface
             $engineer = $this->getReference("engineer$engineers[$engineerIndex]", Engineer::class);
             unset($engineers[$engineerIndex]);
             $project = new Project($company, $this->getReference("client$clientIndex", Client::class), $engineer);
-            $project->setDeliveryDate(new DatePoint('+5 months'));
-            $project->setState(ConstructionProjectState::RUNNING);
+            $project->setDeliveryDate(new DatePoint('+5 months'))
+                ->setName($this->faker->city())
+                ->setState(ConstructionProjectState::RUNNING);
             $manager->persist($project);
             $constraints = $this->validator->validate($project);
             if ($constraints->count() > 0) {

@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Uid\Uuid;
 
 class SchoolRoleManagerTest extends TestCase
 {
@@ -30,7 +31,7 @@ class SchoolRoleManagerTest extends TestCase
     {
         $director = new User();
         $refId = new \ReflectionProperty(User::class, 'id');
-        $refId->setValue($director, \Symfony\Component\Uid\Uuid::v4());
+        $refId->setValue($director, Uuid::v4());
         $school = new School($director);
 
         $user = $director; // The user IS the director
