@@ -80,6 +80,6 @@ ENV APP_VERSION=${APP_VERSION}
 RUN set -eux; \
     mkdir -p var/cache var/log var/share; \
     composer dump-autoload --classmap-authoritative --no-dev; \
-    chmod +x bin/console; \
+    chmod +x bin/console
 
 VOLUME /app/var/share
