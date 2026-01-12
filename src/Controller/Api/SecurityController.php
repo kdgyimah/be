@@ -25,7 +25,7 @@ use Symfony\Component\Routing\Attribute\Route;
         ref: '#/components/schemas/ErrorResponse',
     )
 )]
-#[Route('/api', name: 'api_', methods: 'POST')]
+#[Route('/api', name: 'api_', methods: Request::METHOD_POST)]
 class SecurityController
 {
     #[Security]

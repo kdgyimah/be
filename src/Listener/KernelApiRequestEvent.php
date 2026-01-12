@@ -62,7 +62,7 @@ readonly class KernelApiRequestEvent
     {
         $request = $event->getRequest();
 
-        if ('api' !== $this->security->getFirewallConfig($request)?->getName()
+        if (!in_array($this->security->getFirewallConfig($request)?->getName(), ['api', 'api_login'])
             || 'app.swagger_ui' === $request->attributes->get('_route')
         ) {
             return;

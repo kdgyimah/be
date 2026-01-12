@@ -4,7 +4,6 @@ namespace App\Enum;
 
 enum SchoolScope: string
 {
-    case DIRECTOR = 'DIRECTOR';
     case MANAGE_STUDENTS = 'MANAGE_STUDENTS';
     case MANAGE_PROGRAMS = 'MANAGE_PROGRAMS';
     case MANAGE_PROSPECTS = 'MANAGE_PROSPECTS';

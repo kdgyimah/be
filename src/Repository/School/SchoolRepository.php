@@ -30,8 +30,10 @@ class SchoolRepository extends ServiceEntityRepository
     public function findByUser(User $user): iterable
     {
         return $this->createQueryBuilder('s')
-            ->innerJoin(UserScope::class, 'us', Join::WITH, 's.id = us.school')
-            ->where('us.user = :user')
+            ->select('DISTINCT s')
+            ->leftJoin(UserScope::class, 'us', Join::ON, 's.id = us.school AND us.user = :user')
+            ->where('us IS NOT NULL')
+            ->orWhere('s.director = :user')
             ->setParameter('user', $user->id, UuidType::NAME)
             ->getQuery()
             ->toIterable();

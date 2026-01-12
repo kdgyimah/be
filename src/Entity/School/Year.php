@@ -22,7 +22,7 @@ class Year implements TimestampableEntityInterface
     use PrimaryKeyTrait;
     use TimestampableEntityTrait;
 
-    #[ORM\Column(type: Types::STRING, unique: true, updatable: false)]
+    #[ORM\Column(type: Types::STRING, unique: true, updatable: false, index: true)]
     public private(set) string $name;
 
     #[ORM\ManyToOne(targetEntity: School::class, inversedBy: 'years')]
