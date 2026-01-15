@@ -22,11 +22,11 @@ trait ListInputTrait
         $count = $request->query->getInt('count', 10);
 
         if ($page < 1) {
-            throw new BadRequestHttpException('The page parameter is invalid', code: ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_PAGE->value);
+            throw new BadRequestHttpException('The page parameter is invalid', code: ErrorCode::PAGINATION_BAD_PAGE->value);
         }
 
         if ($count < 1 || $count > 100) {
-            throw new BadRequestHttpException('The count parameter is invalid', code: ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_COUNT->value);
+            throw new BadRequestHttpException('The count parameter is invalid', code: ErrorCode::PAGINATION_BAD_COUNT->value);
         }
 
         return new ListInput($page, $count);

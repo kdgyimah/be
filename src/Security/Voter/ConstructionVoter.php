@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class ConstructionVoter extends Voter
 {
-    public function __construct(private UserScopeRepository $userScopeRepository)
+    public function __construct(private readonly UserScopeRepository $userScopeRepository)
     {
     }
 

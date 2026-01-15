@@ -6,6 +6,7 @@ use App\Entity\Construction\Company;
 use App\Entity\Construction\Engineer;
 use App\Entity\Construction\Project;
 use App\Enum\ConstructionProjectState;
+use App\Repository\Trait\ConstructionTrait;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -21,6 +22,8 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
  */
 class EngineerRepository extends ServiceEntityRepository
 {
+    use ConstructionTrait;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Engineer::class);
@@ -31,7 +34,7 @@ class EngineerRepository extends ServiceEntityRepository
      */
     public function findByCompany(Company $company, int $page, int $count): iterable
     {
-        $qb = $this->getQueryByCompany($company)
+        $qb = $this->getQueryByCompany($company, 'e')
             ->leftJoin(Project::class, 'p', Join::ON, 'p.engineer = e AND p.state = :state')
             ->select('e, p')
             ->setParameter('state', ConstructionProjectState::RUNNING)
@@ -43,16 +46,9 @@ class EngineerRepository extends ServiceEntityRepository
 
     public function countByCompany(Company $company): int
     {
-        return $this->getQueryByCompany($company)
+        return $this->getQueryByCompany($company, 'e')
             ->select('count(e.id)')
             ->getQuery()
             ->getSingleScalarResult();
-    }
-
-    private function getQueryByCompany(Company $company): QueryBuilder
-    {
-        return $this->createQueryBuilder('e')
-            ->where('e.company = :company')
-            ->setParameter('company', $company->id, UuidType::NAME);
     }
 }

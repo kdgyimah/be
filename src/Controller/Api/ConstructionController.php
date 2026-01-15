@@ -5,13 +5,14 @@ namespace App\Controller\Api;
 use App\Controller\Trait\ListInputTrait;
 use App\Dto\Output\Construction\CompanyListedOutput;
 use App\Dto\Output\Construction\EngineerListedOutput;
+use App\Dto\Output\Construction\ProjectListedOutput;
 use App\Dto\Output\Construction\WorkerListedOutput;
 use App\Entity\Construction\Company;
 use App\Entity\Construction\Engineer;
 use App\Entity\Construction\Project;
 use App\Entity\User;
 use App\Enum\ConstructionScope;
-use App\Repository\Construction\ProjectRepository;
+use App\Enum\ErrorCode;
 use App\Service\Construction\ConstructionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Attribute\Model;
@@ -75,6 +76,37 @@ class ConstructionController
         return new StreamedResponse($json, headers: ['Content-Type' => 'application/json']);
     }
 
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Page number',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'integer',
+            default: 1,
+            minimum: 1
+        ),
+    )]
+    #[OA\Parameter(
+        name: 'count',
+        description: 'Number of maximum returned students',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'integer',
+            default: 10,
+            maximum: 100,
+            minimum: 10
+        )
+    )]
+    #[OA\Response(
+        response: Response::HTTP_BAD_REQUEST,
+        description: 'bad parameters',
+        content: new OA\JsonContent(
+            ref: '#/components/schemas/ErrorResponse',
+            example: ['code' => ErrorCode::PAGINATION_BAD_PAGE, 'message' => 'The page parameter is invalid']
+        )
+    )]
     #[IsGranted(ConstructionScope::LIST_EMPLOYEES->value, 'company')]
     #[Route('/{id}/engineers', name: 'list_engineers', methods: Request::METHOD_GET)]
     public function listEngineers(
@@ -95,10 +127,42 @@ class ConstructionController
         );
     }
 
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Page number',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'integer',
+            default: 1,
+            minimum: 1
+        ),
+    )]
+    #[OA\Parameter(
+        name: 'count',
+        description: 'Number of maximum returned students',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'integer',
+            default: 10,
+            maximum: 100,
+            minimum: 10
+        )
+    )]
+    #[OA\Response(
+        response: Response::HTTP_BAD_REQUEST,
+        description: 'bad parameters',
+        content: new OA\JsonContent(
+            ref: '#/components/schemas/ErrorResponse',
+            example: ['code' => ErrorCode::PAGINATION_BAD_PAGE, 'message' => 'The page parameter is invalid']
+        )
+    )]
     #[IsGranted(ConstructionScope::LIST_EMPLOYEES->value, 'company')]
     #[Route('/{id}/workers', name: 'list_workers', methods: Request::METHOD_GET)]
     public function listWorkers(
-        #[MapEntity(message: 'The company is not found')] Company $company,
+        #[MapEntity(message: 'The company is not found')]
+        Company $company,
         Request $request,
         ConstructionService $constructionService,
         StreamWriterInterface $jsonStreamWriter,
@@ -115,6 +179,68 @@ class ConstructionController
         );
     }
 
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Page number',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'integer',
+            default: 1,
+            minimum: 1
+        ),
+    )]
+    #[OA\Parameter(
+        name: 'count',
+        description: 'Number of maximum returned students',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'integer',
+            default: 10,
+            maximum: 100,
+            minimum: 10
+        )
+    )]
+    #[OA\Response(
+        response: Response::HTTP_BAD_REQUEST,
+        description: 'bad parameters',
+        content: new OA\JsonContent(
+            ref: '#/components/schemas/ErrorResponse',
+            example: ['code' => ErrorCode::PAGINATION_BAD_PAGE, 'message' => 'The page parameter is invalid']
+        )
+    )]
+    #[Route('{id}/projects', name: 'list_projects', methods: Request::METHOD_GET)]
+    public function listProjects(
+        #[MapEntity(message: 'The company is not found')]
+        Company $company,
+        Request $request,
+        ConstructionService $constructionService,
+        StreamWriterInterface $jsonStreamWriter,
+    ): Response {
+        $listInput = $this->getListInput($request);
+
+        $projects = $constructionService->listProjects($company, $listInput);
+
+        return $this->getListResponse(
+            $projects,
+            $constructionService->countProjectsByCompany($company),
+            $jsonStreamWriter,
+            ProjectListedOutput::class
+        );
+    }
+
+    #[OA\Response(
+        response: Response::HTTP_NO_CONTENT,
+        description: 'Engineer is assigned the project',
+    )]
+    #[OA\Response(
+        response: Response::HTTP_BAD_REQUEST,
+        description: 'engineer and project have different companies',
+        content: new OA\JsonContent(
+            ref: '#/components/schemas/ErrorResponse',
+        )
+    )]
     #[Route('/assign/{engineer}/{project}', name: 'assign_engineer', methods: Request::METHOD_POST)]
     public function assignEngineer(
         #[MapEntity(id: 'engineer', message: "engineer doesn't exist")] Engineer $engineer,

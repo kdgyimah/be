@@ -177,7 +177,7 @@ class SchoolController
             type: 'integer',
             default: 10,
             maximum: 100,
-            minimum: 1
+            minimum: 10
         )
     )]
     #[OA\Response(
@@ -204,7 +204,7 @@ class SchoolController
         description: 'bad parameters',
         content: new OA\JsonContent(
             ref: '#/components/schemas/ErrorResponse',
-            example: ['code' => ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_PAGE, 'message' => 'The page parameter is invalid']
+            example: ['code' => ErrorCode::PAGINATION_BAD_PAGE, 'message' => 'The page parameter is invalid']
         )
     )]
     #[OA\Response(
@@ -212,7 +212,6 @@ class SchoolController
         description: 'the year was not found',
         content: new OA\JsonContent(
             ref: '#/components/schemas/ErrorResponse',
-            example: ['code' => ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_PAGE, 'message' => 'The page parameter is invalid']
         )
     )]
     #[Route('/students/year/{id}', name: 'list_students', methods: Request::METHOD_GET)]

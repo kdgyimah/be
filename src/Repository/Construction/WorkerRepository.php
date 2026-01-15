@@ -4,8 +4,8 @@ namespace App\Repository\Construction;
 
 use App\Entity\Construction\Company;
 use App\Entity\Construction\Worker;
+use App\Repository\Trait\ConstructionTrait;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,6 +17,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class WorkerRepository extends ServiceEntityRepository
 {
+    use ConstructionTrait;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Worker::class);
@@ -27,7 +29,7 @@ class WorkerRepository extends ServiceEntityRepository
      */
     public function findByCompany(Company $company, int $page, int $count): Paginator
     {
-        $qb = $this->getQueryByCompany($company)
+        $qb = $this->getQueryByCompany($company, 'w')
             ->setFirstResult(($page - 1) * $count)
             ->setMaxResults($count);
 
@@ -36,16 +38,9 @@ class WorkerRepository extends ServiceEntityRepository
 
     public function countByCompany(Company $company): int
     {
-        return $this->getQueryByCompany($company)
+        return $this->getQueryByCompany($company, 'w')
             ->select('count(w.id)')
             ->getQuery()
             ->getSingleScalarResult();
-    }
-
-    private function getQueryByCompany(Company $company): QueryBuilder
-    {
-        return $this->createQueryBuilder('w')
-            ->where('w.company = :company')
-            ->setParameter('company', $company);
     }
 }

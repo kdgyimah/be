@@ -22,6 +22,7 @@ readonly class ConstructionService
         private ObjectMapperInterface $objectMapper,
         private EngineerRepository $engineerRepository,
         private WorkerRepository $workerRepository,
+        private ProjectRepository $projectRepository,
     ) {
     }
 
@@ -69,5 +70,23 @@ readonly class ConstructionService
     public function countWorkersByCompany(Company $company): int
     {
         return $this->workerRepository->countByCompany($company);
+    }
+
+    /**
+     * @param Company $company
+     * @param ListInput $listInput
+     * @return iterable<ProjectListedOutput>
+     */
+    public function listProjects(Company $company, ListInput $listInput): iterable
+    {
+        $projects = $this->projectRepository->findByCompany($company, $listInput->page, $listInput->count);
+        foreach ($projects as $project) {
+            yield $this->objectMapper->map($project, ProjectListedOutput::class);
+        }
+    }
+
+    public function countProjectsByCompany(Company $company): int
+    {
+        return $this->projectRepository->countByCompany($company);
     }
 }
