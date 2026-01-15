@@ -18,14 +18,14 @@ trait ListInputTrait
      */
     private function getListInput(Request $request): ListInput
     {
-        $page = $request->query->get('page', 1);
-        $count = $request->query->get('count', 10);
+        $page = $request->query->getInt('page', 1);
+        $count = $request->query->getInt('count', 10);
 
-        if ($page < 1 || !is_int($page)) {
+        if ($page < 1) {
             throw new BadRequestHttpException('The page parameter is invalid', code: ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_PAGE->value);
         }
 
-        if ($count < 1 || $count > 100 || !is_int($count)) {
+        if ($count < 1 || $count > 100) {
             throw new BadRequestHttpException('The count parameter is invalid', code: ErrorCode::SCHOOL_YEAR_STUDENTS_BAD_COUNT->value);
         }
 
