@@ -1,41 +1,51 @@
 lexik_jwt_authentication:
+    # Keys & passphrase
     secret_key: '%env(resolve:JWT_SECRET_KEY)%'
     public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
     pass_phrase: '%env(JWT_PASSPHRASE)%'
     token_ttl: 86400
     user_id_claim: email
 
+    # Blocklist (optional, recommended for logout)
     blocklist_token:
         enabled: true
         cache: cache.app
 
+    # Extract JWT from split cookies
     token_extractors:
         split_cookie:
             enabled: true
             cookies:
                 - yesman_jwt_hp
                 - yesman_jwt_s
+        # Disable header extraction if you only want cookies
+        authorization_header: false
+        query_parameter: false
 
+    # Configure the split cookies used for authentication
     set_cookies:
         yesman_jwt_hp:
-            lifetime: null
-            samesite: strict
+            lifetime: null           # session cookie
+            samesite: none
             path: /
             domain: '%env(JWT_COOKIE_DOMAIN)%'
-            httpOnly: false
+            httpOnly: false          # accessible by client JS for SPA
             partitioned: false
+            secure: true
             split:
                 - header
                 - payload
 
         yesman_jwt_s:
-            lifetime: null
-            samesite: strict
+            lifetime: null           # session cookie
+            samesite: none
             path: /
             domain: '%env(JWT_COOKIE_DOMAIN)%'
-            httpOnly: true
+            httpOnly: false           # secure, not accessible by JS
             partitioned: false
+            secure: true
             split:
                 - signature
 
+    # Remove token from response body if cookies are used
     remove_token_from_body_when_cookies_used: true

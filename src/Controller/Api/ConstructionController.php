@@ -17,8 +17,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\JsonStreamer\StreamWriterInterface;
@@ -44,10 +46,13 @@ use Symfony\Component\TypeInfo\Type;
     )
 )]
 #[Route('/api/construction', name: 'api_construction_', requirements: ['id' => '^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$'])]
-class ConstructionController
+class ConstructionController extends AbstractController
 {
     use ListInputTrait;
 
+    // -------------------------
+    // List companies
+    // -------------------------
     #[OA\Response(
         response: Response::HTTP_OK,
         description: 'list of managed constructions sites',
@@ -75,6 +80,9 @@ class ConstructionController
         return new StreamedResponse($json, headers: ['Content-Type' => 'application/json']);
     }
 
+    // -------------------------
+    // List engineers for a company
+    // -------------------------
     #[IsGranted(ConstructionScope::LIST_EMPLOYEES->value, 'company')]
     #[Route('/{id}/engineers', name: 'list_engineers', methods: Request::METHOD_GET)]
     public function listEngineers(
@@ -95,6 +103,9 @@ class ConstructionController
         );
     }
 
+    // -------------------------
+    // List workers for a company
+    // -------------------------
     #[IsGranted(ConstructionScope::LIST_EMPLOYEES->value, 'company')]
     #[Route('/{id}/workers', name: 'list_workers', methods: Request::METHOD_GET)]
     public function listWorkers(
@@ -115,6 +126,9 @@ class ConstructionController
         );
     }
 
+    // -------------------------
+    // Assign engineer to project
+    // -------------------------
     #[Route('/assign/{engineer}/{project}', name: 'assign_engineer', methods: Request::METHOD_POST)]
     public function assignEngineer(
         #[MapEntity(id: 'engineer', message: "engineer doesn't exist")] Engineer $engineer,
@@ -128,5 +142,27 @@ class ConstructionController
         $entityManager->flush();
 
         return new Response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    // -------------------------
+    // /api/construction/me endpoint
+    // -------------------------
+     #[IsGranted('ROLE_USER')]
+    #[Route('/me', name: 'me', methods: ['GET'])]
+    public function me(
+        #[CurrentUser] ?User $user
+    ): JsonResponse {
+        if (!$user) {
+            return new JsonResponse(['code' => 401, 'message' => 'Unauthenticated'], 401);
+        }
+
+       return $this->json([
+        'id' => $user->id?->toRfc4122(), // Convert Uuid object to string
+        'email' => $user->email, // Direct property access
+        'firstname' => $user->firstname,
+        'lastname' => $user->lastname,
+        'phoneNumber' => $user->phoneNumber,
+        'roles' => $user->getRoles(), // This method exists
+        ]);
     }
 }
