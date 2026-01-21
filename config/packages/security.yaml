@@ -17,7 +17,7 @@ security:
             security: false
 
         api_login:
-            pattern: ^/api/(login|token/refresh)$
+            pattern: ^/api/(login|token|refresh|logout)$
             provider: users_in_db
             stateless: true
             json_login:
@@ -32,8 +32,6 @@ security:
             stateless: true
             provider: users_in_db
             jwt: ~
-            logout:
-                path: api_logout
 
         # main:
             # lazy: true

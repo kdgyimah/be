@@ -30,31 +30,25 @@ readonly class KernelApiRequestEvent
     {
         $request = $event->getRequest();
 
-        if ('api' !== $this->security->getFirewallConfig($request)?->getName()) {
+        if ('api_login' !== $this->security->getFirewallConfig($request)?->getName()) {
             return;
         }
 
         $tokenString = $this->refreshTokenService->extractRefreshToken($request);
+        $response = new Response(status: Response::HTTP_NO_CONTENT);
 
-        if (empty($tokenString)) {
-            return;
+        if (!empty($tokenString)) {
+            /** @var ?RefreshToken $refreshToken */
+            $refreshToken = $this->entityManager->getRepository(RefreshToken::class)->find($tokenString);
+
+            if (null !== $refreshToken) {
+                $this->entityManager->remove($refreshToken);
+                $this->entityManager->flush();
+            }
+
+            $this->refreshTokenService->removeCookie($response);
         }
 
-        /** @var ?RefreshToken $refreshToken */
-        $refreshToken = $this->entityManager->getRepository(RefreshToken::class)->find($tokenString);
-
-        if (null !== $refreshToken) {
-            $this->entityManager->remove($refreshToken);
-            $this->entityManager->flush();
-        }
-
-        $response = $event->getResponse();
-
-        if (null === $response) {
-            $response = new JsonResponse(status: Response::HTTP_NO_CONTENT);
-        }
-
-        $this->refreshTokenService->removeCookie($response);
         $event->setResponse($response);
     }
 

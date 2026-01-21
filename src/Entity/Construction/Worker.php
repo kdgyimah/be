@@ -29,7 +29,7 @@ class Worker implements TimestampableEntityInterface
     public private(set) string $lastname;
 
     #[IsPhoneNumber]
-    #[ORM\Column(type: Types::STRING, length: 255)]
+    #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
     public private(set) string $phoneNumber;
 
     #[ORM\ManyToOne(targetEntity: Company::class)]

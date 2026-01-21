@@ -13,9 +13,8 @@ readonly class RefreshTokenService
         #[Autowire(param: 'refresh_token_parameter_name')]
         private string $refreshTokenParameterName,
         #[Autowire(param: 'refresh_token_ttl')]
-        private int    $refreshTokenTTL,
-    )
-    {
+        private int $refreshTokenTTL,
+    ) {
     }
 
     public function extractRefreshToken(Request $request): string

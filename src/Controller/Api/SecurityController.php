@@ -6,16 +6,18 @@ use App\Entity\RefreshToken;
 use App\Service\RefreshTokenService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\Http\Cookie\JWTCookieProvider;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManager;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\TokenExtractor\TokenExtractorInterface;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use OpenApi\Attributes as OA;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Http\Event\LogoutEvent;
 
 #[OA\Tag('auth')]
 #[OA\Response(
@@ -85,9 +87,29 @@ class SecurityController
         description: 'Logout success'
     )]
     #[Route('/logout', name: 'logout')]
-    public function logout(): JsonResponse
-    {
-        throw new \RuntimeException('logout: not supposed to be reached');
+    public function logout(
+        EventDispatcherInterface $eventDispatcher,
+        Request $request,
+        TokenStorageInterface $tokenStorage,
+    ): Response {
+        $event = new LogoutEvent($request, $tokenStorage->getToken());
+        $eventDispatcher->dispatch($event);
+
+        $response = $event->getResponse();
+
+        if (null === $response) {
+            $response = new Response(status: Response::HTTP_NO_CONTENT);
+        }
+
+        if ($request->cookies->has('yesman_jwt_hp')) {
+            $response->headers->clearCookie('yesman_jwt_hp');
+        }
+
+        if ($request->cookies->has('yesman_jwt_s')) {
+            $response->headers->clearCookie('yesman_jwt_s');
+        }
+
+        return $response;
     }
 
     #[Security(name: 'cookieRefresh')]
@@ -132,7 +154,7 @@ class SecurityController
         #[Autowire(service: 'lexik_jwt_authentication.cookie_provider.yesman_jwt_s')]
         JWTCookieProvider $JWTCookieProviderS,
         TokenExtractorInterface $tokenExtractor,
-    ): JsonResponse {
+    ): Response {
         $refreshTokenString = $refreshTokenService->extractRefreshToken($request);
         $response = new JsonResponse();
         $userEmail = null;
@@ -163,6 +185,8 @@ class SecurityController
                     ->setData(['message' => 'Invalid credentials', 'code' => Response::HTTP_UNAUTHORIZED])
                     ->setStatusCode(Response::HTTP_UNAUTHORIZED);
             }
+
+            $response = new Response();
 
             $cookieProviders = [$JWTCookieProviderHp, $JWTCookieProviderS];
             $token = $JWTManager->create($refreshToken->user);

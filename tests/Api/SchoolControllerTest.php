@@ -67,7 +67,7 @@ class SchoolControllerTest extends WebTestCase
         // Set other required fields if any
         $this->entityManager->persist($school);
 
-        $scope = new UserScope($user, $school, SchoolScope::DIRECTOR); // Adjust scope as needed
+        $scope = new UserScope($user, $school, SchoolScope::MANAGE_STUDENTS);
         $this->entityManager->persist($scope);
         $this->entityManager->flush();
 
@@ -99,7 +99,7 @@ class SchoolControllerTest extends WebTestCase
         $this->entityManager->persist($school);
         $this->entityManager->flush(); // Get ID
 
-        $this->client->request('GET', '/api/schools/' . $school->id . '/years');
+        $this->client->request('GET', '/api/schools/'.$school->id.'/years');
 
         // Should trigger Voter?
         // SchoolVoter::SHOW probably checks if user is connected to school.
@@ -108,7 +108,7 @@ class SchoolControllerTest extends WebTestCase
         $this->entityManager->persist($scope);
         $this->entityManager->flush();
 
-        $this->client->request('GET', '/api/schools/' . $school->id . '/years');
+        $this->client->request('GET', '/api/schools/'.$school->id.'/years');
 
         $this->assertResponseIsSuccessful();
     }

@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Controller\Trait\ListInputTrait;
+use App\Dto\Input\Construction\CreateWorkerInput;
 use App\Dto\Output\Construction\CompanyListedOutput;
 use App\Dto\Output\Construction\EngineerListedOutput;
 use App\Dto\Output\Construction\ProjectListedOutput;
@@ -10,6 +11,7 @@ use App\Dto\Output\Construction\WorkerListedOutput;
 use App\Entity\Construction\Company;
 use App\Entity\Construction\Engineer;
 use App\Entity\Construction\Project;
+use App\Entity\Construction\Worker;
 use App\Entity\User;
 use App\Enum\ConstructionScope;
 use App\Enum\ErrorCode;
@@ -18,15 +20,18 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\JsonStreamer\StreamWriterInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\TypeInfo\Type;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[OA\Tag('construction')]
 #[OA\Response(
@@ -76,10 +81,13 @@ class ConstructionController
         return new StreamedResponse($json, headers: ['Content-Type' => 'application/json']);
     }
 
-    #[OA\Parameter(
+    #[OA\PathParameter(
+        name: 'id',
+        description: 'the company id'
+    )]
+    #[OA\QueryParameter(
         name: 'page',
         description: 'Page number',
-        in: 'query',
         required: false,
         schema: new OA\Schema(
             type: 'integer',
@@ -87,10 +95,9 @@ class ConstructionController
             minimum: 1
         ),
     )]
-    #[OA\Parameter(
+    #[OA\QueryParameter(
         name: 'count',
         description: 'Number of maximum returned students',
-        in: 'query',
         required: false,
         schema: new OA\Schema(
             type: 'integer',
@@ -127,10 +134,13 @@ class ConstructionController
         );
     }
 
-    #[OA\Parameter(
+    #[OA\PathParameter(
+        name: 'id',
+        description: 'the company id'
+    )]
+    #[OA\QueryParameter(
         name: 'page',
         description: 'Page number',
-        in: 'query',
         required: false,
         schema: new OA\Schema(
             type: 'integer',
@@ -138,10 +148,9 @@ class ConstructionController
             minimum: 1
         ),
     )]
-    #[OA\Parameter(
+    #[OA\QueryParameter(
         name: 'count',
         description: 'Number of maximum returned students',
-        in: 'query',
         required: false,
         schema: new OA\Schema(
             type: 'integer',
@@ -179,10 +188,13 @@ class ConstructionController
         );
     }
 
-    #[OA\Parameter(
+    #[OA\PathParameter(
+        name: 'id',
+        description: 'the company id'
+    )]
+    #[OA\QueryParameter(
         name: 'page',
         description: 'Page number',
-        in: 'query',
         required: false,
         schema: new OA\Schema(
             type: 'integer',
@@ -190,10 +202,9 @@ class ConstructionController
             minimum: 1
         ),
     )]
-    #[OA\Parameter(
+    #[OA\QueryParameter(
         name: 'count',
         description: 'Number of maximum returned students',
-        in: 'query',
         required: false,
         schema: new OA\Schema(
             type: 'integer',
@@ -230,6 +241,14 @@ class ConstructionController
         );
     }
 
+    #[OA\PathParameter(
+        name: 'engineer',
+        description: 'the engineer id'
+    )]
+    #[OA\PathParameter(
+        name: 'project',
+        description: 'the project id'
+    )]
     #[OA\Response(
         response: Response::HTTP_NO_CONTENT,
         description: 'Engineer is assigned the project',
@@ -254,5 +273,66 @@ class ConstructionController
         $entityManager->flush();
 
         return new Response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[OA\RequestBody(
+        content: new OA\JsonContent(
+            ref: new Model(type: CreateWorkerInput::class)
+        )
+    )]
+    #[OA\Response(
+        response: Response::HTTP_CREATED,
+        description: 'create worker successfully',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'id', type: 'integer'),
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: Response::HTTP_BAD_REQUEST,
+        description: 'engineer and project have different companies',
+        content: new OA\JsonContent(
+            ref: '#/components/schemas/ErrorResponse',
+        )
+    )]
+    #[Route('/{id}/workers', methods: Request::METHOD_POST)]
+    public function createWorker(
+        #[MapRequestPayload(
+            acceptFormat: 'json',
+            validationFailedStatusCode: Response::HTTP_BAD_REQUEST,
+        )]
+        CreateWorkerInput $createWorkerInput,
+        #[MapEntity]
+        Company $company,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator,
+    ): Response {
+        $worker = new Worker($company)
+            ->setLastname($createWorkerInput->lastname)
+            ->setFirstname($createWorkerInput->firstname)
+            ->setPhoneNumber($createWorkerInput->phoneNumber)
+            ->setProfession($createWorkerInput->profession)
+            ->setDailySalary($createWorkerInput->dailySalary);
+
+        $constraints = $validator->validate($worker);
+
+        if ($constraints->count() > 0) {
+            $messages = [];
+
+            foreach ($constraints as $constraint) {
+                $messages[] = $constraint->getMessage();
+            }
+
+            return new JsonResponse(
+                ['message' => implode('. ', $messages), 'code' => 0],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
+        $entityManager->persist($worker);
+        $entityManager->flush();
+
+        return new JsonResponse(['id' => $worker->id]);
     }
 }

@@ -22,6 +22,7 @@ lexik_jwt_authentication:
             samesite: strict
             path: /
             domain: '%env(JWT_COOKIE_DOMAIN)%'
+            secure: true
             httpOnly: false
             partitioned: false
             split:
@@ -33,6 +34,7 @@ lexik_jwt_authentication:
             samesite: strict
             path: /
             domain: '%env(JWT_COOKIE_DOMAIN)%'
+            secure: true
             httpOnly: true
             partitioned: false
             split:
