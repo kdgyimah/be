@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Constant\ConstructionScope;
 use App\Controller\Trait\ListInputTrait;
 use App\Dto\Input\Construction\CreateWorkerInput;
 use App\Dto\Output\Construction\CompanyListedOutput;
@@ -13,7 +14,6 @@ use App\Entity\Construction\Engineer;
 use App\Entity\Construction\Project;
 use App\Entity\Construction\Worker;
 use App\Entity\User;
-use App\Enum\ConstructionScope;
 use App\Enum\ErrorCode;
 use App\Service\Construction\ConstructionService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -54,6 +54,7 @@ class ConstructionController
 {
     use ListInputTrait;
 
+    #[OA\Get(operationId: 'list companies')]
     #[OA\Response(
         response: Response::HTTP_OK,
         description: 'list of managed constructions sites',
@@ -81,6 +82,7 @@ class ConstructionController
         return new StreamedResponse($json, headers: ['Content-Type' => 'application/json']);
     }
 
+    #[OA\Get(operationId: 'list engineers')]
     #[OA\PathParameter(
         name: 'id',
         description: 'the company id'
@@ -107,6 +109,14 @@ class ConstructionController
         )
     )]
     #[OA\Response(
+        response: Response::HTTP_OK,
+        description: 'list of managed engineers',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: EngineerListedOutput::class))
+        )
+    )]
+    #[OA\Response(
         response: Response::HTTP_BAD_REQUEST,
         description: 'bad parameters',
         content: new OA\JsonContent(
@@ -114,7 +124,7 @@ class ConstructionController
             example: ['code' => ErrorCode::PAGINATION_BAD_PAGE, 'message' => 'The page parameter is invalid']
         )
     )]
-    #[IsGranted(ConstructionScope::LIST_EMPLOYEES->value, 'company')]
+    #[IsGranted(ConstructionScope::LIST_EMPLOYEES, 'company')]
     #[Route('/{id}/engineers', name: 'list_engineers', methods: Request::METHOD_GET)]
     public function listEngineers(
         #[MapEntity(message: 'The company is not found')] Company $company,
@@ -134,6 +144,7 @@ class ConstructionController
         );
     }
 
+    #[OA\Get(operationId: 'list workers')]
     #[OA\PathParameter(
         name: 'id',
         description: 'the company id'
@@ -160,6 +171,14 @@ class ConstructionController
         )
     )]
     #[OA\Response(
+        response: Response::HTTP_OK,
+        description: 'list of managed workers',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: WorkerListedOutput::class))
+        )
+    )]
+    #[OA\Response(
         response: Response::HTTP_BAD_REQUEST,
         description: 'bad parameters',
         content: new OA\JsonContent(
@@ -167,7 +186,7 @@ class ConstructionController
             example: ['code' => ErrorCode::PAGINATION_BAD_PAGE, 'message' => 'The page parameter is invalid']
         )
     )]
-    #[IsGranted(ConstructionScope::LIST_EMPLOYEES->value, 'company')]
+    #[IsGranted(ConstructionScope::LIST_EMPLOYEES, 'company')]
     #[Route('/{id}/workers', name: 'list_workers', methods: Request::METHOD_GET)]
     public function listWorkers(
         #[MapEntity(message: 'The company is not found')]
@@ -188,6 +207,7 @@ class ConstructionController
         );
     }
 
+    #[OA\Get(operationId: 'list projects')]
     #[OA\PathParameter(
         name: 'id',
         description: 'the company id'
@@ -211,6 +231,14 @@ class ConstructionController
             default: 10,
             maximum: 100,
             minimum: 10
+        )
+    )]
+    #[OA\Response(
+        response: Response::HTTP_OK,
+        description: 'list of projects managed by a company',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: ProjectListedOutput::class))
         )
     )]
     #[OA\Response(
@@ -241,6 +269,7 @@ class ConstructionController
         );
     }
 
+    #[OA\Patch(operationId: 'assign an engineer to a project')]
     #[OA\PathParameter(
         name: 'engineer',
         description: 'the engineer id'
@@ -260,7 +289,7 @@ class ConstructionController
             ref: '#/components/schemas/ErrorResponse',
         )
     )]
-    #[Route('/assign/{engineer}/{project}', name: 'assign_engineer', methods: Request::METHOD_POST)]
+    #[Route('/assign/{engineer}/{project}', name: 'assign_engineer', methods: Request::METHOD_PATCH)]
     public function assignEngineer(
         #[MapEntity(id: 'engineer', message: "engineer doesn't exist")] Engineer $engineer,
         #[MapEntity(id: 'project', message: "the project doesn't exist")] Project $project,
@@ -275,6 +304,11 @@ class ConstructionController
         return new Response(null, Response::HTTP_NO_CONTENT);
     }
 
+    #[OA\Post(operationId: 'create a worker')]
+    #[OA\PathParameter(
+        name: 'id',
+        description: 'the company id'
+    )]
     #[OA\RequestBody(
         content: new OA\JsonContent(
             ref: new Model(type: CreateWorkerInput::class)
@@ -291,19 +325,24 @@ class ConstructionController
     )]
     #[OA\Response(
         response: Response::HTTP_BAD_REQUEST,
-        description: 'engineer and project have different companies',
+        description: "can't join project and engineer",
         content: new OA\JsonContent(
             ref: '#/components/schemas/ErrorResponse',
         )
     )]
-    #[Route('/{id}/workers', methods: Request::METHOD_POST)]
+    #[OA\Response(
+        response: Response::HTTP_UNPROCESSABLE_ENTITY,
+        description: "values are invalid",
+        content: new OA\JsonContent(
+            ref: '#/components/schemas/ErrorResponse',
+        )
+    )]
+    #[IsGranted(ConstructionScope::MANAGE_EMPLOYEES, 'company')]
+    #[Route('/{id}/workers', name: 'create_worker', methods: Request::METHOD_POST)]
     public function createWorker(
-        #[MapRequestPayload(
-            acceptFormat: 'json',
-            validationFailedStatusCode: Response::HTTP_BAD_REQUEST,
-        )]
+        #[MapRequestPayload(acceptFormat: 'json')]
         CreateWorkerInput $createWorkerInput,
-        #[MapEntity]
+        #[MapEntity(message: 'The company is not found')]
         Company $company,
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator,
@@ -313,7 +352,7 @@ class ConstructionController
             ->setFirstname($createWorkerInput->firstname)
             ->setPhoneNumber($createWorkerInput->phoneNumber)
             ->setProfession($createWorkerInput->profession)
-            ->setDailySalary($createWorkerInput->dailySalary);
+            ->setDailySalary($createWorkerInput->dailySalary->amount, $createWorkerInput->dailySalary->currency);
 
         $constraints = $validator->validate($worker);
 
@@ -325,7 +364,7 @@ class ConstructionController
             }
 
             return new JsonResponse(
-                ['message' => implode('. ', $messages), 'code' => 0],
+                ['message' => implode('\n', $messages), 'code' => 0],
                 Response::HTTP_UNPROCESSABLE_ENTITY
             );
         }
@@ -333,6 +372,6 @@ class ConstructionController
         $entityManager->persist($worker);
         $entityManager->flush();
 
-        return new JsonResponse(['id' => $worker->id]);
+        return new JsonResponse(['id' => $worker->id], status: Response::HTTP_CREATED);
     }
 }

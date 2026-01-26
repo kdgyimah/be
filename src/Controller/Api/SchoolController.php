@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Constant\SchoolScope;
 use App\Controller\Trait\ListInputTrait;
 use App\Dto\Output\School\SchoolListedOutput;
 use App\Dto\Output\School\StudentListedOutput;
@@ -99,7 +100,7 @@ class SchoolController
         )
     )]
     #[Route('/{id}/logo', name: 'logo', methods: Request::METHOD_GET)]
-    #[IsGranted(attribute: SchoolVoter::SHOW, subject: 'school', statusCode: Response::HTTP_NOT_FOUND)]
+    #[IsGranted(attribute: SchoolScope::SHOW, subject: 'school', statusCode: Response::HTTP_NOT_FOUND)]
     public function getLogo(
         #[MapEntity(message: 'The school is not found')] School $school,
         FileSystemStorage $storage,
@@ -134,7 +135,7 @@ class SchoolController
         )
     )]
     #[Route('/{id}/years', name: 'list_years', methods: Request::METHOD_GET)]
-    #[IsGranted(attribute: SchoolVoter::SHOW, subject: 'school', statusCode: Response::HTTP_NOT_FOUND)]
+    #[IsGranted(attribute: SchoolScope::SHOW, subject: 'school', statusCode: Response::HTTP_NOT_FOUND)]
     public function getYears(
         #[MapEntity(message: 'The school is not found')] School $school,
         StreamWriterInterface $jsonStreamWriter,
@@ -216,7 +217,7 @@ class SchoolController
     )]
     #[Route('/students/year/{id}', name: 'list_students', methods: Request::METHOD_GET)]
     #[IsGranted(
-        SchoolVoter::MANAGE_STUDENTS,
+        SchoolScope::MANAGE_STUDENTS,
         new Expression('args["year"].school'),
         'the year is not found',
         Response::HTTP_NOT_FOUND,

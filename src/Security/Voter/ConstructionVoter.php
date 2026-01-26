@@ -2,10 +2,11 @@
 
 namespace App\Security\Voter;
 
+use App\Constant\ConstructionScope;
 use App\Entity\Construction\Company;
+use App\Entity\Construction\UserScope;
 use App\Entity\User;
-use App\Enum\ConstructionScope;
-use App\Repository\Construction\UserScopeRepository;
+use App\Repository\UserScopeRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -23,7 +24,7 @@ class ConstructionVoter extends Voter
 
     public function supportsAttribute(string $attribute): bool
     {
-        return null !== ConstructionScope::tryFrom($attribute);
+        return in_array($attribute, ConstructionScope::getScopes());
     }
 
     public function supportsType(string $subjectType): bool
@@ -47,6 +48,14 @@ class ConstructionVoter extends Voter
             return false;
         }
 
-        return $this->userScopeRepository->count(['company' => $subject, 'user' => $user, 'scope' => $attribute]) > 0;
+        $userScope = $this->userScopeRepository->findByUserAndCompany($user, $subject);
+
+        if (!$userScope instanceof UserScope) {
+            $vote?->addReason('user has no scope for this company');
+
+            return false;
+        }
+
+        return in_array($attribute, $userScope->scopes);
     }
 }

@@ -7,7 +7,7 @@ use App\Entity\Interface\TimestampableEntityInterface;
 use App\Entity\School\UserScope as SchoolUserScope;
 use App\Entity\Trait\PrimaryKeyTrait;
 use App\Entity\Trait\TimestampableEntityTrait;
-use App\Repository\School\UserScopeRepository;
+use App\Repository\UserScopeRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -25,19 +25,13 @@ abstract class AbstractUserScope implements TimestampableEntityInterface
     #[ORM\JoinColumn(nullable: false)]
     public private(set) User $user;
 
-    #[ORM\Column(type: Types::STRING, length: 40)]
-    public private(set) string $scope;
+    /** @var list<string> */
+    #[ORM\Column(type: Types::SIMPLE_ARRAY)]
+    public private(set) array $scopes;
 
-    public function __construct(User $user, \BackedEnum $scope)
+    public function __construct(User $user, array $scopes)
     {
-        $this->scope = $scope->value;
+        $this->scopes = $scopes;
         $this->user = $user;
-    }
-
-    abstract public function getScope(): mixed;
-
-    protected function getStringScope(): string
-    {
-        return $this->scope;
     }
 }

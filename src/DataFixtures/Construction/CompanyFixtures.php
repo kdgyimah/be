@@ -2,11 +2,11 @@
 
 namespace App\DataFixtures\Construction;
 
+use App\Constant\ConstructionScope;
 use App\DataFixtures\UserFixtures;
 use App\Entity\Construction\Company;
 use App\Entity\Construction\UserScope;
 use App\Entity\User;
-use App\Enum\ConstructionScope;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -34,13 +34,12 @@ class CompanyFixtures extends Fixture implements DependentFixtureInterface
 
         $company = new Company();
         $company->setName('Company Test');
+        $company->setCurrency('XOF');
         $manager->persist($company);
         $this->addReference(CompanyFixtures::COMPANY, $company);
 
-        foreach (ConstructionScope::cases() as $scope) {
-            $scope = new UserScope($ceo, $company, $scope);
-            $manager->persist($scope);
-        }
+        $scope = new UserScope($ceo, $company, ConstructionScope::getScopes());
+        $manager->persist($scope);
 
         $constraints = $this->validator->validate($company);
         if ($constraints->count() > 0) {

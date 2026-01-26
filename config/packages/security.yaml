@@ -17,7 +17,8 @@ security:
             security: false
 
         api_login:
-            pattern: ^/api/(login|token|refresh|logout)$
+            lazy: true
+            pattern: ^/api/(login|token/refresh|logout)$
             provider: users_in_db
             stateless: true
             json_login:
@@ -33,6 +34,12 @@ security:
             provider: users_in_db
             jwt: ~
 
+        oauth:
+            pattern: ^/automation
+            security: true
+            stateless: true
+            oauth2: true
+
         # main:
             # lazy: true
             # provider: users_in_db
@@ -46,6 +53,10 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/(login|token/refresh|logout|doc)$, roles: PUBLIC_ACCESS }
+        - { path: ^/authorize, roles: IS_AUTHENTICATED_REMEMBERED }
+        - { path: ^/automation, roles: IS_AUTHENTICATED_REMEMBERED }
+        - { path: ^/api, roles: IS_AUTHENTICATED_REMEMBERED }
 
 when@test:
     security:

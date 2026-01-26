@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Tests\Api;
+namespace Api;
 
+use App\Constant\SchoolScope;
 use App\Entity\School\School;
 use App\Entity\School\UserScope;
 use App\Entity\User;
-use App\Enum\SchoolScope;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -67,7 +67,7 @@ class SchoolControllerTest extends WebTestCase
         // Set other required fields if any
         $this->entityManager->persist($school);
 
-        $scope = new UserScope($user, $school, SchoolScope::MANAGE_STUDENTS);
+        $scope = new UserScope($user, $school, [SchoolScope::MANAGE_STUDENTS]);
         $this->entityManager->persist($scope);
         $this->entityManager->flush();
 
@@ -75,13 +75,6 @@ class SchoolControllerTest extends WebTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseHeaderSame('content-type', 'application/json');
-
-        $content = $this->client->getResponse()->getContent();
-        $data = json_decode($content, true);
-
-        // $this->assertIsArray($data);
-        // Expect at least one school since we added one
-        // $this->assertNotEmpty($data);
     }
 
     public function testListYears(): void
@@ -99,12 +92,7 @@ class SchoolControllerTest extends WebTestCase
         $this->entityManager->persist($school);
         $this->entityManager->flush(); // Get ID
 
-        $this->client->request('GET', '/api/schools/'.$school->id.'/years');
-
-        // Should trigger Voter?
-        // SchoolVoter::SHOW probably checks if user is connected to school.
-        // We need to add UserScope for this user and school.
-        $scope = new UserScope($user, $school, SchoolScope::MANAGE_STUDENTS);
+        $scope = new UserScope($user, $school, [SchoolScope::SHOW]);
         $this->entityManager->persist($scope);
         $this->entityManager->flush();
 

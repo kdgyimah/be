@@ -2,20 +2,18 @@
 
 namespace App\Security\Voter;
 
+use App\Constant\SchoolScope;
 use App\Entity\School\School;
+use App\Entity\School\UserScope;
 use App\Entity\User;
-use App\Enum\SchoolScope;
-use App\Repository\School\UserScopeRepository;
+use App\Repository\UserScopeRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class SchoolVoter extends Voter
 {
-    public const string SHOW = SchoolVoter::class.':show';
-    public const string MANAGE_STUDENTS = SchoolVoter::class.':manageStudents';
-
-    public function __construct(private readonly UserScopeRepository $schoolUserScope)
+    public function __construct(private readonly UserScopeRepository $userScopeRepository)
     {
     }
 
@@ -26,12 +24,12 @@ class SchoolVoter extends Voter
 
     public function supportsAttribute(string $attribute): bool
     {
-        return in_array($attribute, [SchoolVoter::SHOW, SchoolVoter::MANAGE_STUDENTS]);
+        return in_array($attribute, SchoolScope::getScopes());
     }
 
     public function supportsType(string $subjectType): bool
     {
-        return is_a($subjectType, School::class, true) || 'null' === $subjectType;
+        return is_a($subjectType, School::class, true);
     }
 
     protected function voteOnAttribute(
@@ -54,14 +52,14 @@ class SchoolVoter extends Voter
             return false;
         }
 
-        return match ($attribute) {
-            SchoolVoter::SHOW => $this->schoolUserScope->count(['user' => $user, 'school' => $subject->id]) > 0,
-            SchoolVoter::MANAGE_STUDENTS => $this->schoolUserScope->count([
-                'user' => $user,
-                'school' => $subject->id,
-                'scope' => SchoolScope::MANAGE_STUDENTS,
-            ]) > 0,
-            default => false,
-        };
+        $userScope = $this->userScopeRepository->findByUserAndSchool($user, $subject);
+
+        if (!$userScope instanceof UserScope) {
+            $vote?->addReason('user has no scope for this school');
+
+            return false;
+        }
+
+        return in_array($attribute, $userScope->scopes);
     }
 }

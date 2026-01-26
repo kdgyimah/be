@@ -31,7 +31,11 @@ api doc: `https://localhost/api/doc`
 
 the reference user infos are:
 
->email → user@company.com
+>email → "user@company.com"
 >
->password → password
+>password → "password"
 
+admin users:
+>email → "mj@yesman.com"
+>
+>password → "password"

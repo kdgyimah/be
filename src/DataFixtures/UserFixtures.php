@@ -25,28 +25,20 @@ class UserFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        $user = $this->createUser(
+        $this->createUser(
+            $manager,
             'Michael',
             'Jordan',
             'mj@yesman.com',
             roles: [User::ROLE_ADMIN],
         );
 
-        $manager->persist($user);
-
         $user = $this->createUser(
+            $manager,
             'user firstname',
             'user lastname Dir',
             'user@company.com',
         );
-
-        $manager->persist($user);
-
-        $constraint = $this->validator->validate($user);
-
-        if ($constraint->count() > 0) {
-            throw new ConstraintDefinitionException($constraint);
-        }
 
         $this->addReference(UserFixtures::USER, $user);
 
@@ -54,6 +46,7 @@ class UserFixtures extends Fixture
     }
 
     private function createUser(
+        ObjectManager $manager,
         ?string $firstname = null,
         ?string $lastname = null,
         ?string $email = null,
@@ -71,6 +64,14 @@ class UserFixtures extends Fixture
         }
 
         $user->setPassword($this->userPasswordHasher->hashPassword($user, 'password'));
+
+        $manager->persist($user);
+
+        $constraint = $this->validator->validate($user);
+
+        if ($constraint->count() > 0) {
+            throw new ConstraintDefinitionException($constraint);
+        }
 
         return $user;
     }

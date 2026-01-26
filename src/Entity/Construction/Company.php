@@ -9,6 +9,7 @@ use App\Listener\TimestampEntityListener;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\Table;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[Table(name: 'construction_company')]
@@ -21,9 +22,20 @@ class Company implements TimestampableEntityInterface
     #[ORM\Column(type: Types::STRING, length: 255)]
     public private(set) string $name;
 
+    #[ORM\Column(type: Types::STRING, length: 3)]
+    #[Assert\Currency]
+    public private(set) string $currency;
+
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function setCurrency(string $currency): self
+    {
+        $this->currency = $currency;
 
         return $this;
     }

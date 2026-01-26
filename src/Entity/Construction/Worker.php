@@ -3,6 +3,7 @@
 namespace App\Entity\Construction;
 
 use App\Entity\Interface\TimestampableEntityInterface;
+use App\Entity\Money;
 use App\Entity\Trait\PrimaryKeyTrait;
 use App\Entity\Trait\TimestampableEntityTrait;
 use App\Enum\WorkerProfession;
@@ -10,13 +11,16 @@ use App\Listener\TimestampEntityListener;
 use App\Validator\IsPhoneNumber;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Attribute as Vich;
 
 #[ORM\Entity]
 #[Vich\Uploadable]
 #[ORM\Table(name: 'construction_worker')]
 #[ORM\EntityListeners([TimestampEntityListener::class])]
+#[UniqueEntity(fields: ['phoneNumber', 'company'], message: 'Worker with the same phone number already exists!')]
 class Worker implements TimestampableEntityInterface
 {
     use PrimaryKeyTrait;
@@ -29,6 +33,7 @@ class Worker implements TimestampableEntityInterface
     public private(set) string $lastname;
 
     #[IsPhoneNumber]
+    #[Assert\DisableAutoMapping]
     #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
     public private(set) string $phoneNumber;
 
@@ -41,8 +46,9 @@ class Worker implements TimestampableEntityInterface
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     public private(set) ?string $profilePictureFilename = null;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    public private(set) float $dailySalary;
+    #[ORM\Embedded]
+    #[Assert\Valid]
+    public private(set) Money $dailySalary;
 
     #[ORM\Column(type: Types::STRING, enumType: WorkerProfession::class)]
     public private(set) WorkerProfession $profession;
@@ -50,23 +56,25 @@ class Worker implements TimestampableEntityInterface
     public function __construct(Company $company)
     {
         $this->company = $company;
+        $this->dailySalary = new Money();
+        $this->dailySalary->setCurrency($company->currency);
     }
 
-    public function setFirstname(string $firstname): Worker
+    public function setFirstname(string $firstname): self
     {
         $this->firstname = $firstname;
 
         return $this;
     }
 
-    public function setLastname(string $lastname): Worker
+    public function setLastname(string $lastname): self
     {
         $this->lastname = $lastname;
 
         return $this;
     }
 
-    public function setPhoneNumber(string $phoneNumber): Worker
+    public function setPhoneNumber(string $phoneNumber): self
     {
         $this->phoneNumber = $phoneNumber;
 
@@ -87,9 +95,15 @@ class Worker implements TimestampableEntityInterface
         return $this;
     }
 
-    public function setDailySalary(float $dailySalary): self
+    public function setDailySalary(?int $amount = null, ?string $currency = null): self
     {
-        $this->dailySalary = $dailySalary;
+        if ($amount !== null) {
+            $this->dailySalary->setAmount($amount);
+        }
+
+        if ($currency !== null) {
+            $this->dailySalary->setCurrency($currency);
+        }
 
         return $this;
     }

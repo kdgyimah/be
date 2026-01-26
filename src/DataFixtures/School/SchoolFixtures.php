@@ -2,13 +2,12 @@
 
 namespace App\DataFixtures\School;
 
+use App\Constant\SchoolScope;
 use App\DataFixtures\UserFixtures;
 use App\Entity\School\School;
 use App\Entity\School\UserScope;
 use App\Entity\User;
-use App\Enum\SchoolScope;
 use App\Listener\TimestampEntityListener;
-use App\Service\RoleManager\SchoolRoleManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -55,13 +54,10 @@ class SchoolFixtures extends Fixture implements DependentFixtureInterface
             ->setEmail('ecole@example.com')
             ->setPhone('+886765675675')
             ->setTimezone('Europe/Paris')
-            ->setCurrency('CFA')
-        ;
+            ->setCurrency('CFA');
 
-        foreach (SchoolScope::cases() as $schoolScope) {
-            $scope = new UserScope($director, $school, $schoolScope);
-            $manager->persist($scope);
-        }
+        $scope = new UserScope($director, $school, SchoolScope::getScopes());
+        $manager->persist($scope);
 
         $this->setReference(SchoolFixtures::PM, $school);
 
