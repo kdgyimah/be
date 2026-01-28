@@ -7,9 +7,9 @@ if [ "$WORKER" = true ]; then
 fi
 
 if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
-	if [ "$APP_ENV" = 'dev' ]; then
+	#if [ "$APP_ENV" = 'dev' ]; then
 	    # composer install
-	fi
+    #fi
 
 	if [ "$APP_ENV" = 'dev' ] && ! { [ -f config/jwt/private.pem ] && [ -f config/jwt/public.pem ]; }; then
         php bin/console lexik:jwt:generate-keypair --overwrite --quiet
