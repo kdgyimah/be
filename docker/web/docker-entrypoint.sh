@@ -8,7 +8,7 @@ fi
 
 if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	if [ "$APP_ENV" = 'dev' ]; then
-	    composer install
+	    # composer install
 	fi
 
 	if [ "$APP_ENV" = 'dev' ] && ! { [ -f config/jwt/private.pem ] && [ -f config/jwt/public.pem ]; }; then
