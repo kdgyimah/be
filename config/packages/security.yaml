@@ -53,7 +53,7 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
-        - { path: ^/api/(login|token/refresh|logout|doc)$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/(login|token/refresh|logout|doc(/[a-z]+)?)$, roles: PUBLIC_ACCESS }
         - { path: ^/authorize, roles: IS_AUTHENTICATED_REMEMBERED }
         - { path: ^/automation, roles: IS_AUTHENTICATED_REMEMBERED }
         - { path: ^/api, roles: IS_AUTHENTICATED_REMEMBERED }
